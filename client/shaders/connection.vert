@@ -22,6 +22,7 @@ out float drawID;
 void main()
 {
   gl_Position = (transformViewProj * transformWorld) * vec4(inPosition, 1);
+  gl_VertexID;
 
   drawPosition = (transformWorld * vec4(inPosition, 1)).xyz;
   drawTexCoord = inTexCoord;

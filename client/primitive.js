@@ -78,6 +78,22 @@ export class Topology {
     return tpl;
   } /* planeIndexed */
 
+  static plane(width = 30, height = 30) {
+    let tpl = Topology.#planeIndexed(width, height);
+
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        tpl.vtx[y * width + x] = Vertex.fromCoord(
+          x, 0, y,
+          x / (width - 1), y / (height - 1),
+          0, 1, 0
+        );
+      }
+    }
+
+    return tpl;
+  } /* plane */
+
   static sphere(radius = 1, width = 30, height = 30) {
     let tpl = Topology.#planeIndexed(width, height);
 
@@ -207,6 +223,37 @@ export class Topology {
     return new Uint32Array(this.idx);
   } /* getIndicesAsUintArray */
 } /* Topology */
+
+export class EmptyPrimitive {
+  gl;
+  material;
+  geometryType = Topology.TRIANGLES;
+  vertexCount = 4;
+
+  constructor(glContext, vertexCount = 4, geometryType = Topology.TRIANGLES, material = null) {
+    this.gl = glContext;
+    this.vertexCount = vertexCount;
+    this.geometryType = geometryType;
+    this.material = material;
+  } /* constructor */
+
+  draw(cameraBuffer = null) {
+    this.material.apply();
+    if (cameraBuffer != null) {
+      cameraBuffer.bind(this.material.shader, 1, "cameraBuffer");
+    }
+    this.gl.drawArrays(Topology.geometryTypeToGL(this.geometryType), 0, this.vertexCount);
+  } /* draw */
+
+  static drawFromParams(gl, vertexCount, geometryType, material, cameraBuffer = null) {
+    material.apply();
+
+    if (cameraBuffer != null) {
+      cameraBuffer.bind(material.shader, 1, "cameraBuffer");
+    }
+    gl.drawArrays(Topology.geometryTypeToGL(geometryType), 0, vertexCount);
+  } /* drawFromParams */
+} /* EmptyPrimitive */
 
 export class Primitive {
   gl;

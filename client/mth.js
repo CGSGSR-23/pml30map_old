@@ -31,7 +31,15 @@ export class Vec3 {
   length() {
     return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
   } /* length */
-  
+
+  distance(m2) {
+    let
+      dx = this.x - m2.x,
+      dy = this.y - m2.y,
+      dz = this.z - m2.z;
+    return Math.sqrt(dx * dx + dy * dy + dz * dz);
+  } /* distance */
+
   dot(m2) {
     return this.x * m2.x + this.y * m2.y + this.z * m2.z;
   } /* dot */

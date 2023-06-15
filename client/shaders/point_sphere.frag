@@ -14,7 +14,8 @@ uniform sampler2D Texture0;
 
 void main() {
   vec3 lightDir = normalize(vec3(1));
+  float l = clamp(dot(normalize(drawNormal), lightDir), 0.6, 1.0);
 
-  outColorID = vec4(vec3(clamp(dot(drawNormal, lightDir), 0.0, 1.0)), drawID);
+  outColorID = vec4(vec3(0.30, 0.80, 0.47) * l, drawID);
   outPosition = vec4(drawPosition, 1);
 } /* main */

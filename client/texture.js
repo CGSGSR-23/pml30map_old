@@ -61,6 +61,8 @@ export class Texture {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
   } /* constructor */
 
   
@@ -95,13 +97,17 @@ export class Texture {
     // async image loading
     let image = new Image();
     image.src = path;
-    image.addEventListener("load", () => {
-      this.size.w = image.width;
-      this.size.h = image.height;
-      gl.bindTexture(gl.TEXTURE_2D, this.id);
-      gl.texImage2D(gl.TEXTURE_2D, 0, this.format.internal, this.format.format, this.format.componentType, image);
-    });
+    image.addEventListener("load", () => { this.fromImage(image); });
   } /* load */
+
+  fromImage(image) {
+    let gl = this.gl;
+
+    this.size.w = image.width;
+    this.size.h = image.height;
+    gl.bindTexture(gl.TEXTURE_2D, this.id);
+    gl.texImage2D(gl.TEXTURE_2D, 0, this.format.internal, this.format.format, this.format.componentType, image);
+  } /* fromImage */
 
   bind(program, index = 0) {
     let gl = this.gl;
@@ -116,6 +122,7 @@ export class Texture {
   resize(size) {
     let gl = this.gl;
     this.size = size.copy();
+
     gl.texImage2D(gl.TEXTURE_2D, 0, this.format.internal, this.size.w, this.size.h, 0, this.format.format, this.format.componentType, null);
   } /* resize */
 } /* Texture */
