@@ -1,5 +1,4 @@
-import * as rnd from "./system.js";
-import * as mth from "./mth.js";
+import * as mth from "./system/mth.js";
 
 export class Arcball {
     // camera unit

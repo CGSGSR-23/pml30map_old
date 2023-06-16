@@ -1,4 +1,4 @@
-import * as rnd from "./system.js";
+import * as rnd from "./system/system.js";
 
 export class Skysphere {
   static async create() {
@@ -40,3 +40,5 @@ export class Skysphere {
     };
   } /* create */
 } /* Skysphere */
+
+/* skysphere.js */

@@ -238,6 +238,9 @@ export class System {
         unit.response(system);
 
         if (unit.doSuicide === true) {
+          if (unit.close !== undefined) {
+            unit.close(system);
+          }
           delete system.units[id];
         }
       }

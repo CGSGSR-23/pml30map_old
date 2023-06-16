@@ -1,8 +1,10 @@
-import * as rnd from "./system.js";
-import * as mth from "./mth.js";
-import * as cameraController from "./unit_camera_controller.js";
-import {Banner} from "./unit_banner.js";
-import {Skysphere} from "./unit_skysphere.js";
+// system imports
+import * as rnd from "./system/system.js";
+import * as mth from "./system/mth.js";
+
+import * as cameraController from "./camera_controller.js";
+import {Banner} from "./banner.js";
+import {Skysphere} from "./skysphere.js";
 
 let system = new rnd.System();
 
@@ -43,6 +45,14 @@ async function createNode(location) {
     }, /* get */
 
     set: function(newPosition) {
+      // check if node is possible to move here
+      for (const [key, value] of Object.entries(nodes)) {
+        if (value !== unit &&  value.pos.distance(newPosition) <= 2) {
+          return false;
+        }
+      }
+
+      // place node
       position = newPosition.copy();
       transform = mth.Mat4.translate(position);
       unit.banner.pos = position.add(new mth.Vec3(0, 2, 0));
@@ -69,6 +79,14 @@ async function createNode(location) {
 
   return unit;
 } /* createNode */
+
+function destroyNode(node) {
+  breakNodeConnections(node);
+  node.doSuicide = true;
+  node.banner.doSuicide = true;
+
+  delete nodes[node.nodeID];
+} /* destroyNode */
 
 let connectionPrimitive = await system.createPrimitive(rnd.Topology.cylinder(), await system.createMaterial("./shaders/connection"));
 let connectionUniqueID = 0;
@@ -132,6 +150,7 @@ function breakNodeConnections(node = null) {
   let keyList = [];
   for (const [key, value] of Object.entries(connections)) {
     if (value.first === node || value.second === node) {
+      value.doSuicide = true;
       keyList.push(key);
     }
   }
@@ -156,38 +175,6 @@ const baseConstructionShower = await system.addUnit(async function() {
     } /* response */
   };
 }); /* baseConstructionShower */
-
-// node pointing unit
-const nodeContentShower = await system.addUnit(async function() {
-  let localX = 0, localY = 0;
-
-  system.canvas.addEventListener("mousemove", (event) => {
-    localX = event.clientX;
-    localY = event.clientY;
-  });
-
-  let activeUnit = undefined;
-
-  return {
-    response(system) {
-      let unit = system.getUnitByCoord(localX, localY);
-
-      if (unit !== undefined && unit.type === "banner") {
-        return;
-      }
-
-      if (activeUnit !== undefined) {
-        activeUnit.banner.show = false;
-        activeUnit = undefined;
-      }
-
-      if (unit !== undefined && unit.type === "node") {
-        unit.banner.show = true;
-        activeUnit = unit;
-      }
-    } /* response */
-  }
-}); /* nodeConnectionShower */
 
 // add point setter unit
 const editorPositions = await system.addUnit(async function() {
@@ -265,8 +252,13 @@ const editorConnections = await system.addUnit(async function() {
           eventPair.first.bannerPromise = Banner.create(system, unit.pos.add(new mth.Vec3(0, 4, 0)), "First element");
         } else {
           eventPair.second = pointEvent;
-
           eventPair.first.bannerPromise.then(banner => banner.doSuicide = true);
+          // refuse connection with invalid banner
+          if (eventPair.first.unit.doSuicide) {
+            eventPair = null;
+            return;
+          }
+
           createConnection(eventPair.first.unit, eventPair.second.unit);
 
           eventPair = null;
@@ -284,27 +276,51 @@ let inputElements = {
   deleteNode: document.getElementById("deleteNode")
 };
 
+// node pointing unit
 let doMoveUnit = true;
-let currentUnit = null;
+let activeContentShowNode = null;
 
+// current unit selector
+let activeBannerShowUnit = null;
+system.canvas.addEventListener("mousemove", (event) => {
+  let unit = system.getUnitByCoord(event.clientX, event.clientY);
+
+  if (unit === activeBannerShowUnit) {
+    return;
+  }
+
+  if (unit !== undefined && unit.type === "banner") {
+    return;
+  }
+
+  if (activeBannerShowUnit !== null) {
+    activeBannerShowUnit.banner.show = false;
+    activeBannerShowUnit = null;
+  }
+
+  if (unit !== undefined && unit.type === "node") {
+    unit.banner.show = true;
+    activeBannerShowUnit = unit;
+  }
+});
+
+// unit content show selector
 system.canvas.addEventListener("mousedown", (event) => {
-  let clickPosition = { x: event.clientX, y: event.clientY };
-
-  let unit = system.getUnitByCoord(clickPosition.x, clickPosition.y);
+  let unit = system.getUnitByCoord(event.clientX, event.clientY);
 
   if (unit === undefined || unit.type != "node") {
     inputElements.nodeID.innerText = "";
     inputElements.nodeName.value = "";
     inputElements.skyspherePath.value = "";
 
-    currentUnit = null;
+    activeContentShowNode = null;
     doMoveUnit = false;
   } else {
     inputElements.nodeID.innerText = unit.nodeID;
     inputElements.nodeName.value = unit.name;
     inputElements.skyspherePath.value = unit.skyspherePath;
 
-    currentUnit = unit;
+    activeContentShowNode = unit;
     if (event.shiftKey) {
       doMoveUnit = true;
     }
@@ -316,35 +332,37 @@ system.canvas.addEventListener("mouseup", (event) => {
 }); /* event system.canvas:"mouseup" */
 
 system.canvas.addEventListener("mousemove", (event) => {
-  if (currentUnit !== null && doMoveUnit) {
+  if (activeContentShowNode !== null && doMoveUnit) {
     let position = system.getPositionByCoord(event.clientX, event.clientY);
 
     if (position.x !== position.y && position.y !== position.z) {
-      currentUnit.pos = position;
+      activeContentShowNode.pos = position;
     } else {
       doMoveUnit = false;
     }
   }
 }); /* event system.canvas:"mousemove" */
 
+
+// current unit controls
+
 inputElements.nodeName.addEventListener("change", () => {
   if (currentUnit !== null) {
-    currentUnit.name = inputElements.nodeName.value;
+    activeContentShowNode.name = inputElements.nodeName.value;
   }
 }); /* event inputElements.nodeName:"change" */
 
 inputElements.skyspherePath.addEventListener("change", () => {
   if (currentUnit !== null) {
-    currentUnit.skyspherePath = inputElements.skyspherePath.value;
+    activeContentShowNode.skyspherePath = inputElements.skyspherePath.value;
   }
+  console.log(Object.keys(connections).length);
 }); /* event inputElements.skyspherePath:"change" */
 
 inputElements.deleteNode.addEventListener("click", () => {
   if (currentUnit !== null) {
-    breakNodeConnections(currentUnit);
-    currentUnit.doSuicide = true;
-    delete nodes[currentUnit.nodeID];
-    currentUnit = null;
+    destroyNode(activeContentShowNode);
+    activeContentShowNode = null;
   }
 }); /* event inputElements.deleteNode:"click" */
 

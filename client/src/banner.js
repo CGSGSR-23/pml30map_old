@@ -1,4 +1,4 @@
-import * as rnd from "./system.js";
+import * as rnd from "./system/system.js";
 
 
 let bannerShader = null;
@@ -79,4 +79,4 @@ export class Banner {
   } /* addBanner */
 } /* Banner */
 
-/* unit_banner.js */
+/* banner.js */
