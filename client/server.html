@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <title>PML30 interactive map</title>
+  </head>
+  <body>
+    <div style="border: 2px dashed red; padding: 10px; margin: 5px;">
+      <h1>Add node</h1>
+      <label> Image value:
+        <input id="addNodeImageFile" type="file">
+      </label><br/>
+      <label> Pos X:
+        <input id="addNodePosX" type="range" min="-100" max="100">
+      </label><br/>
+      <label> Pos Y:
+        <input id="addNodePosY" type="range" min="-100" max="100">
+      </label><br/>
+      <label> Pos Z:
+        <input id="addNodePosZ" type="range" min="-100" max="100">
+      </label><br/>
+      <label>
+        <input id="addNodeButton" type="button" value="addNode">
+      </label><br/>
+    </div>
+    <div style="border: 2px dashed red; padding: 10px; margin: 5px;">
+      <h1>Nodes connections</h1>
+      <label> First node URI:
+        <input id="firstNodeURI" type="text">
+      </label><br/>
+      <label> Second node URI:
+        <input id="secondNodeURI" type="text">
+      </label><br/>
+      <label>
+        <input id="connectNodesButton" type="button" value="connect">
+      </label><br/>
+      <label>
+        <input id="disconnectNodesButton" type="button" value="disconnect">
+      </label><br/>
+    </div>
+    <div style="border: 2px dashed red; padding: 10px; margin: 5px;">
+      <h1>Def nodes</h1>
+      <label> Node URI:
+        <input id="nodeURI" type="text">
+      </label><br/>
+      <label>
+        <input id="setDefNodeButton" type="button" value="set def">
+      </label><br/>
+      <label>
+        <input id="getDefNodeButton" type="button" value="get def">
+      </label><br/>
+      <label>
+        <input id="getNodeButton" type="button" value="get node">
+      </label><br/>
+      <label>
+        <input id="delNodeButton" type="button" value="del node">
+      </label><br/>
+      <label>
+        <input id="getNodeConnectionsButton" type="button" value="get all con">
+      </label><br/>
+      <label>
+        <input id="getAllNodesButton" type="button" value="get all nodes">
+      </label><br/>
+      <label>
+        <input id="pingButton" type="button" value="ping">
+      </label><br/>
+      <p id="outputField"></p>
+      <script type="module">
+        import { Connection } from "./bundle.js";
+  
+        const connection = new Connection();  
+  
+        //document.getElementById("addNodeSendButton").onclick = ()=>{
+        //  console.log("ADD NODE");
+        //  console.log(document.getElementById("addNodeImageFile").files);
+        //  if (document.getElementById("addNodeImageFile").files.length === 0)
+        //    return;
+        //  const img = document.getElementById("addNodeImageFile").files[0];
+        //  const pos = [
+        //    document.getElementById("addNodePosX").value,
+        //    document.getElementById("addNodePosY").value,
+        //    document.getElementById("addNodePosZ").value,
+        //  ];
+  //
+        //  const formData = new FormData;
+        //  formData.append('img', img);
+        //  formData.append('pos', pos);
+        //  formData.append('connections', []);
+        //  fetch('/addNode', {
+        //      method: 'POST',
+        //      body: formData
+        //    });
+        //};
+
+        //function onAddNode()
+        /////////////////////////// Requests
+
+        document.getElementById("addNodeButton").onclick = async ()=>{
+          if (document.getElementById("addNodeImageFile").files.length === 0)
+            return;
+          const imgF = document.getElementById("addNodeImageFile").files[0];
+          const posV = [
+            document.getElementById("addNodePosX").value,
+            document.getElementById("addNodePosY").value,
+            document.getElementById("addNodePosZ").value,
+          ];
+
+          const data = {
+            img: imgF.name,
+            pos: posV
+          };
+          document.getElementById("outputField").innerText = new Uint8Array(await connection.addNode(data)).toString();
+        };
+        
+        document.getElementById("getNodeButton").onclick = async()=>{
+          let uriStr = document.getElementById("nodeURI").value;
+          document.getElementById("outputField").innerText = JSON.stringify(await connection.getNode(new Uint8Array(JSON.parse(uriStr))));
+        };
+
+        document.getElementById("delNodeButton").onclick = async ()=>{
+          let uriStr = document.getElementById("nodeURI").value;
+          await connection.delNode(new Uint8Array(JSON.parse(uriStr)));
+        };
+
+        document.getElementById("getAllNodesButton").onclick = async ()=>{
+          let nodes = await connection.getAllNodes();
+          console.log(nodes);
+
+          let str = "[";
+
+          for (let i = 0; i < nodes.length; i++)
+            str += "[" + new Uint8Array(nodes[i]).toString() + "],";
+          document.getElementById("outputField").innerText = str + "]";
+        };
+  
+        document.getElementById("connectNodesButton").onclick = async ()=>{
+          let uri1 = document.getElementById("firstNodeURI").value,
+              uri2 = document.getElementById("secondNodeURI").value;
+          await connection.connectNodes(uri1, uri2);
+        };
+  
+        document.getElementById("disconnectNodesButton").onclick = async ()=>{
+          let uri1 = document.getElementById("firstNodeURI").value,
+              uri2 = document.getElementById("secondNodeURI").value;
+          await connection.disconnectNodes(uri1, uri2);
+        };
+        
+        document.getElementById("getNodeConnectionsButton").onclick = async ()=>{
+          let uri = document.getElementById("nodeURI").value
+          await connection.getNodeConnections(uri);
+        };
+  
+        document.getElementById("setDefNodeButton").onclick = async ()=>{
+          let uriStr = document.getElementById("nodeURI").value;
+          await connection.setDefNodeURI(new Uint8Array(JSON.parse(uriStr)));
+        };
+
+        document.getElementById("getDefNodeButton").onclick = async ()=>{
+          let uri = await connection.getDefNodeURI();
+
+          console.log(uri);
+          let uriStr = "[" + new Uint8Array(uri).toString() + "]";
+          document.getElementById("outputField").innerText = uriStr;
+        };
+        
+        document.getElementById("pingButton").onclick = ()=>{
+          connection.ping();
+        };
+      </script>
+    </div>
+  </body>
+</html>

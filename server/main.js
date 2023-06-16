@@ -31,8 +31,6 @@ class NodesDB { // Nodes data base
   async init() {
     if (mongodbConnection instanceof Promise)
       mongodbConnection = await mongodbConnection;
-    console.log("mongodb");
-    console.log(mongodbConnection);
     this.db = await mongodbConnection.db("pml30map");
     //if (this.db.nodes == undefined)
     this.nodesC = await this.db.collection("nodes");
@@ -40,6 +38,8 @@ class NodesDB { // Nodes data base
     this.varsC = await this.db.collection("variables");
   }
   
+  //////////// Nodes
+
   async getNode( uri ) {
     var node = await this.nodesC.findOne({_id: new ObjectId(uri)});
     return node;
@@ -63,6 +63,18 @@ class NodesDB { // Nodes data base
     return cs;
   }
 
+  async getNeighbours( uri ) {
+    let right = await (await this.connectionsC.find({ id1: uri })).toArray();
+    let left = await (await this.connectionsC.find({ id2: uri })).toArray();
+
+    let outN = [];
+    for (let i = 0; i < right.length; i++)
+      outN[outN.length] = right[i].id2;
+    for (let i = 0; i < left.length; i++)
+      outN[outN.length] = left[i].id1;
+  }
+  //////////////////// Connections
+
   async addConnection( uri1, uri2 ) {
     var c1 = await this.connectionsC.findOne({ id1: uri1, id2: uri2 }),
         c2 = await this.connectionsC.findOne({ id1: uri2, id2: uri1 });
@@ -80,6 +92,8 @@ class NodesDB { // Nodes data base
     this.connectionsC.deleteOne({ id1: uri2, id2: uri1 });
     return true;
   }
+
+  ////////////// Indexes 
 
   async getDefNodeURI() {
     var node = await this.varsC.findOne({var_name: "DefNodeURI" });
@@ -169,56 +183,67 @@ async function main() {
       console.log(output);
     }
 
-    socket.on("getNodeReq", async (uri)=>{
+    socket.on("ping", (res)=>{
+      res(10);
+    });
+
+    socket.on("getNodeReq", async ( uri, res )=>{
       let outData = await nodesDB.getNode(uri);
       LogMsg("getNodeReq", uri, outData);
-      socket.emit("getNodeRes", outData);
+      res(outData);
     });
 
-    socket.on("addNodeReq", async (data)=>{
+    socket.on("getNodeReq", async ( uri, res )=>{
+      let outData = await nodesDB.getNode(uri);
+      LogMsg("getNodeReq", uri, outData);
+      res(outData);
+    });
+
+    socket.on("addNodeReq", async ( data, res )=>{
       let newURI = await nodesDB.addNode(data);
       LogMsg("addNodeReq", data, newURI);
-      socket.emit("addNodeRes", newURI);
+      res(newURI);
     });
 
-    socket.on("delNodeReq", (uri)=>{
+    socket.on("delNodeReq", ( uri, res )=>{
       LogMsg("delNodeReq", uri, "");
+      res();
     });
 
-    socket.on("getAllNodesReq", async ()=>{
+    socket.on("getAllNodesReq", async ( res )=>{
       let outData = await nodesDB.getAllNodeURIs();
       LogMsg("getAllNodesReq", "", outData);
-      socket.emit("getAllNodesRes", outData);
+      res(outData);
     });
 
-    socket.on("connectNodesReq", async (uris)=>{
+    socket.on("connectNodesReq", async ( uris, res )=>{
       let result = await nodesDB.addConnection(uris[0], uris[1]);
       LogMsg("connectNodesReq", uris, result);
-      socket.emit("connectNodesRes", result);
+      res(result);
     });
 
-    socket.on("disconnectNodesReq", async (msg)=>{
+    socket.on("disconnectNodesReq", async ( uris, res )=>{
       let result = await nodesDB.addConnection(uris[0], uris[1]);
       LogMsg("disconnectNodesReq", uris, result);
-      socket.emit("disconnectNodesRes", result);
+      res(result);
     });
 
-    socket.on("setDefNodeURIReq", async (uri)=>{
+    socket.on("setDefNodeURIReq", async ( uri, res )=>{
       let result = await nodesDB.setDefNodeURI(uri);
       LogMsg("setDefNodeURIReq", uri, result);
-      socket.emit("setDefNodeURIRes", result);
+      res(result);
     });
 
-    socket.on("getDefNodeURIReq", async ()=>{
+    socket.on("getDefNodeURIReq", async ( res )=>{
       let outURI = await nodesDB.getDefNodeURI();
       LogMsg("getDefNodeURIReq", "", outURI);
-      socket.emit("getDefNodeURIRes", outURI);
+      res(outURI);
     });
 
-    socket.on("getNodeConnectionsReq", async (uri)=>{
+    socket.on("getNodeConnectionsReq", async ( uri, res )=>{
       let cs = await nodesDB.getNodeConnections(uri);
       LogMsg("getNodeConnectionsReq", uri, cs);
-      socket.emit("getNodeConnectionsRes", cs);
+      res(cs);
     });
 
     socket.on("disconnect", () => {

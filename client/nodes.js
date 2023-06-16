@@ -77,38 +77,66 @@ export class Connection {
     });
   }
 
-  getNodeReq( uri ) {
-    this.socket.emit("getNodeReq", uri);
-  }
-  addNodeReq( data ) {
-    this.socket.emit("addNodeReq", data);
+
+  async send( req, ...args ) {
+    //let out;
+//
+    //await this.socket.emit(req, ( result )=>{
+    //  out = result;
+    //  console.log(result);
+    //});
+//
+    //return out;
+
+    console.log("TEST ARGS:");
+    console.log(args);
+
+    return await new Promise((resolve) => {
+      this.socket.emit(req, ...args, function (response) {
+        console.log("TEST OUT:");
+        console.log(response);
+        resolve(response);
+      });
+    });
   }
 
-  getAllNodesReq() {
-    this.socket.emit("getAllNodesReq");
+  async ping( value ) {
+    return await this.send("ping", value );
   }
 
-  delNodeReq( node ) {
-    this.socket.emit("delNodeReq", node);
+  async getNode( uri ) {
+    return await this.send("getNodeReq", uri);
+  }
+  async addNode( data ) {
+
+    return await this.send("addNodeReq", data);
   }
 
-  connectNodesReq( uri1, uri2 ) {
-    this.socket.emit("connectNodesReq", [uri1, uri2]);
+  async getAllNodes() {
+    return await this.send("getAllNodesReq");
   }
 
-  getNodeConnectionsReq( uri ) {
-    this.socket.emit("getNodeConnectionsReq", uri);
+  async delNode( node ) {
+    return await this.send("delNodeReq", node);
   }
 
-  disconnectNodesReq( uri1, uri2 ) {
-    this.socket.emit("disconnectNodesReq", [uri1, uri2]);
+  async connectNodes( uri1, uri2 ) {
+    return await this.send("connectNodesReq", [uri1, uri2]);
   }
 
-  setDefNodeURIReq( uri ) {
-    this.socket.emit("setDefNodeURIReq", uri);
+  async getNodeConnections( uri ) {
+    return await this.send("getNodeConnectionsReq", uri);
   }
 
-  getDefNodeURIReq() {
-    this.socket.emit("getDefNodeURIReq");
+  async disconnectNodes( uri1, uri2 ) {
+    return await this.send("disconnectNodesReq", [uri1, uri2]);
+  }
+
+  async setDefNodeURI( uri ) {
+    return await this.send("setDefNodeURIReq", uri);
+  }
+
+  async getDefNodeURI() {
+    return await this.send("getDefNodeURIReq");
   }
 }
