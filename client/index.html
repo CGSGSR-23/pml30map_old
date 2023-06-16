@@ -7,15 +7,15 @@
 
   <body style="margin: 0; overflow: hidden;">
     <canvas id="canvas" oncontextmenu="return false"></canvas>
-    <script type="module" src="./main.js"></script>
+    <script type="module" src="./bundle.js"></script>
 
-    <div id="nodeContentsEditor">
+    <div>
       <table>
         <th>Node parameters</th>
         <tr> <td>Node ID:       </td> <td><t id="nodeID"></t>                   </td> </tr>
         <tr> <td>Node name:     </td> <td><input type="text" id="nodeName">     </td> </tr>
         <tr> <td>Skysphere path:</td> <td><input type="text" id="skyspherePath"></td> </tr>
-        <tr> <td><input type="button" id="delete" value="Delete button"></td></tr>
+        <tr> <td><input type="button" id="deleteNode" value="Delete node"></td></tr>
       </table>
     </div>
   </body>

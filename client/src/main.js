@@ -18,24 +18,39 @@ let connections = {};
 let nodeUniqueID = 0;
 let nodePrim = await system.createPrimitive(rnd.Topology.sphere(), await system.createMaterial("./shaders/point_sphere"));
 async function createNode(location) {
-  let matr = mth.Mat4.translate(location);
+  let transform = mth.Mat4.translate(location);
 
   let id = nodeUniqueID++;
   let name = `node#${id}`;
   let banner = await Banner.create(system, location.add(new mth.Vec3(0, 2, 0)), name);
+  let position = location.copy();
   let unit = await system.addUnit(function() {
     return {
       type: "node",
       nodeID: id,
-      pos:  location.copy(),
       banner: banner,
       skyspherePath: "",
       response(system) {
-        system.drawMarkerPrimitive(nodePrim, matr);
+        system.drawMarkerPrimitive(nodePrim, transform);
       }, /* response */
     };
   });
 
+  // position property
+  Object.defineProperty(unit, "pos", {
+    get: function() {
+      return position;
+    }, /* get */
+
+    set: function(newPosition) {
+      position = newPosition.copy();
+      transform = mth.Mat4.translate(position);
+      unit.banner.pos = position.add(new mth.Vec3(0, 2, 0));
+      updateConnectionTransforms(unit);
+    } /* set */
+  });
+
+  // name property
   Object.defineProperty(unit, "name", {
     get: function() {
       return name;
@@ -60,7 +75,7 @@ let connectionUniqueID = 0;
 async function createConnection(firstNode, secondNode) {
   // check if connection is possible
   if (firstNode === secondNode) {
-    console.error("Can't create connection between same nodes");
+    console.error("can't connect node with node itself");
     return null;
   }
   for (const index in connections) {
@@ -91,7 +106,7 @@ async function createConnection(firstNode, secondNode) {
       }, /* updateTransform */
 
       response(system) {
-        system.drawPrimitive(connectionPrimitive, transform);
+        system.drawMarkerPrimitive(connectionPrimitive, transform);
       } /* response */
     };
   });
@@ -102,6 +117,29 @@ async function createConnection(firstNode, secondNode) {
 
   return unit;
 } /* createConnection */
+
+// update transform matrices of all connections with node.
+function updateConnectionTransforms(node = null) {
+  for (const [key, value] of Object.entries(connections)) {
+    if (value.first === node || value.second === node) {
+      value.updateTransform();
+    }
+  }
+} /* updateConnectionTransforms */
+
+// delete all connections with node
+function breakNodeConnections(node = null) {
+  let keyList = [];
+  for (const [key, value] of Object.entries(connections)) {
+    if (value.first === node || value.second === node) {
+      keyList.push(key);
+    }
+  }
+
+  for (let key of keyList) {
+    delete connections[key];
+  }
+} /* breakNodeConnections */
 
 // shows basic construction, will be handling minimap
 const baseConstructionShower = await system.addUnit(async function() {
@@ -199,7 +237,7 @@ const editorConnections = await system.addUnit(async function() {
   let eventPair = null;
 
   system.canvas.addEventListener("mousedown", (event) => {
-    if (event.buttons & 1 === 1) {
+    if (event.buttons & 1 === 1 && !event.shiftKey) {
       pointEvent = {
         x: event.clientX,
         y: event.clientY
@@ -239,65 +277,76 @@ const editorConnections = await system.addUnit(async function() {
   };
 }); /* editorConnections */
 
-const editorContents = await system.addUnit(() => {
-  let contentEditor = document.getElementById("nodeContentsEditor");
-  let inputElements = {
-    nodeID: document.getElementById("nodeID"),
-    nodeName: document.getElementById("nodeName"),
-    skyspherePath: document.getElementById("skyspherePath")
-  };
+let inputElements = {
+  nodeID: document.getElementById("nodeID"),
+  nodeName: document.getElementById("nodeName"),
+  skyspherePath: document.getElementById("skyspherePath"),
+  deleteNode: document.getElementById("deleteNode")
+};
 
-  let currentUnit = null;
-  system.canvas.addEventListener("mousedown", (event) => {
-    let clickPosition = { x: event.clientX, y: event.clientY };
+let doMoveUnit = true;
+let currentUnit = null;
 
-    let unit = system.getUnitByCoord(clickPosition.x, clickPosition.y);
+system.canvas.addEventListener("mousedown", (event) => {
+  let clickPosition = { x: event.clientX, y: event.clientY };
 
-    if (unit === undefined || unit.type != "node") {
-      inputElements.nodeID.innerText = "";
-      inputElements.nodeName.value = "";
-      inputElements.skyspherePath.value = "";
+  let unit = system.getUnitByCoord(clickPosition.x, clickPosition.y);
 
-      currentUnit = null;
-      delta = {x: 0, y: 0};
+  if (unit === undefined || unit.type != "node") {
+    inputElements.nodeID.innerText = "";
+    inputElements.nodeName.value = "";
+    inputElements.skyspherePath.value = "";
+
+    currentUnit = null;
+    doMoveUnit = false;
+  } else {
+    inputElements.nodeID.innerText = unit.nodeID;
+    inputElements.nodeName.value = unit.name;
+    inputElements.skyspherePath.value = unit.skyspherePath;
+
+    currentUnit = unit;
+    if (event.shiftKey) {
+      doMoveUnit = true;
+    }
+  }
+}); /* event system.canvas:"mousedown" */
+
+system.canvas.addEventListener("mouseup", (event) => {
+  doMoveUnit = false;
+}); /* event system.canvas:"mouseup" */
+
+system.canvas.addEventListener("mousemove", (event) => {
+  if (currentUnit !== null && doMoveUnit) {
+    let position = system.getPositionByCoord(event.clientX, event.clientY);
+
+    if (position.x !== position.y && position.y !== position.z) {
+      currentUnit.pos = position;
     } else {
-      inputElements.nodeID.innerText = unit.nodeID;
-      inputElements.nodeName.value = unit.name;
-      inputElements.skyspherePath.value = unit.skyspherePath;
-
-      currentUnit = unit;
+      doMoveUnit = false;
     }
-  }); /* event system.canvas:"mousedown" */
+  }
+}); /* event system.canvas:"mousemove" */
 
-  inputElements.nodeName.addEventListener("change", () => {
-    if (currentUnit !== null) {
-      currentUnit.name = inputElements.nodeName.value;
-    }
-  }); /* event inputElements.nodeName:"change" */
+inputElements.nodeName.addEventListener("change", () => {
+  if (currentUnit !== null) {
+    currentUnit.name = inputElements.nodeName.value;
+  }
+}); /* event inputElements.nodeName:"change" */
 
-  inputElements.skyspherePath.addEventListener("change", () => {
-    if (currentUnit !== null) {
-      currentUnit.skyspherePath = inputElements.skyspherePath.value;
-    }
-  }); /* event inputElements.skyspherePath:"change" */
+inputElements.skyspherePath.addEventListener("change", () => {
+  if (currentUnit !== null) {
+    currentUnit.skyspherePath = inputElements.skyspherePath.value;
+  }
+}); /* event inputElements.skyspherePath:"change" */
 
-  let delta = {
-    x: 0,
-    y: 0
-  };
-  system.canvas.addEventListener("mousemove", (event) => {
-    if (currentUnit !== null && event.buttons & 1 === 1) {
-      delta.x += event.movementX;
-      delta.y += event.movementY;
-    }
-  }); /* event system.canvas:"mousemove" */
-
-  return {
-    response(system) {
-
-    }, /* response */
-  };
-}); /* editorContents */
+inputElements.deleteNode.addEventListener("click", () => {
+  if (currentUnit !== null) {
+    breakNodeConnections(currentUnit);
+    currentUnit.doSuicide = true;
+    delete nodes[currentUnit.nodeID];
+    currentUnit = null;
+  }
+}); /* event inputElements.deleteNode:"click" */
 
 // start system
 system.run();

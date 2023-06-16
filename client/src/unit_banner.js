@@ -4,17 +4,18 @@ import * as rnd from "./system.js";
 let bannerShader = null;
 
 export class Banner {
-  static async create(system, pos, bannerContent) {
+  static async create(system, position, bannerContent) {
     if (bannerShader === null) {
       bannerShader = await system.createShader("./shaders/banner");
     }
 
     let content = bannerContent;
-    let infoPrim, mtl, _this;
+    let infoPrim, mtl;
     let unit = await system.addUnit(() => {
-      return _this = {
+      return {
         show: true,
         type: "banner",
+        pos: position.copy(),
 
         async init(system) {
           mtl = await system.createMaterial(bannerShader);
@@ -27,9 +28,10 @@ export class Banner {
         }, /* init */
 
         response(system) {
-          if (_this.show) {
+          if (unit.show) {
             let up = system.camera.up;
             let rgh = system.camera.right.mul(content.length / 3.0);
+            let pos = unit.pos;
             let data = new Float32Array([
               up.x,  up.y,  up.z,  1,
               rgh.x, rgh.y, rgh.z, 1,

@@ -15,6 +15,10 @@ export class Arcball {
     };
     
     const onMouseMove = function(event) {
+      if (!event.ctrlKey) {
+        return;
+      }
+
       if ((event.buttons & 1) == 1) { // rotate
         let direction = loc.sub(at);
         
