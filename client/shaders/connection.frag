@@ -6,16 +6,11 @@ layout(location = 0) out vec4 outColorID;
 layout(location = 1) out vec4 outPosition;
 
 in vec3 drawPosition;
-in vec2 drawTexCoord;
-in vec3 drawNormal;
 in float drawID;
 
 uniform sampler2D Texture0;
 
 void main() {
-  vec3 lightDir = normalize(vec3(1));
-  float l = clamp(dot(normalize(drawNormal), lightDir), 0.6, 1.0);
-
-  outColorID = vec4(vec3(0.30, 0.80, 0.47) * l, drawID);
+  outColorID = vec4(0.5, 0.5, 0.5, drawID);
   outPosition = vec4(drawPosition, 1);
 } /* main */

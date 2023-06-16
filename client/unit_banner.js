@@ -13,6 +13,7 @@ export class Banner {
     return system.addUnit(() => {
       return _this = {
         show: true,
+        type: "banner",
         async init(system) {
           mtl = await system.createMaterial(bannerShader);
           mtl.ubo = system.createUniformBuffer();
