@@ -9,7 +9,10 @@ function decodeFramebufferStatus(status) {
     case WebGL2RenderingContext.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT: return "attachment missing";
     case WebGL2RenderingContext.FRAMEBUFFER_UNSUPPORTED:                   return "attachment format isn't supported";
   }
-}
+} /* decodeFramebufferStatus */
+
+let currentTarget = null;
+let fetcherTarget = null;
 
 export class Target {
   #gl;
@@ -17,6 +20,7 @@ export class Target {
   attachments = [];
   size;
   depth;
+  drawBuffers;
 
   constructor(gl, attachmentCount) {
     this.size = new mth.Size(800, 600);
@@ -26,12 +30,12 @@ export class Target {
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.FBO);
 
     // create target textures
-    let drawBuffers = [];
+    this.drawBuffers = [];
     for (let i = 0; i < attachmentCount; i++) {
       this.attachments[i] = new Texture(gl, Texture.FLOAT, 4);
-      drawBuffers.push(gl.COLOR_ATTACHMENT0 + i);
+      this.drawBuffers.push(gl.COLOR_ATTACHMENT0 + i);
     }
-    gl.drawBuffers(drawBuffers);
+    gl.drawBuffers(this.drawBuffers);
 
     for (let i = 0; i < attachmentCount; i++) {
       gl.bindTexture(gl.TEXTURE_2D, this.attachments[i].id);
@@ -46,6 +50,24 @@ export class Target {
 
     // console.log(`Framebuffer status: ${decodeFramebufferStatus(gl.checkFramebufferStatus(gl.FRAMEBUFFER))}`);
   } /* constructor */
+
+  getAttachmentValue(att, x, y) {
+    let gl = this.gl;
+
+    if (fetcherTarget == null) {
+      fetcherTarget = gl.createFramebuffer();
+    }
+    let dst = new Float32Array(4);
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fetcherTarget);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.attachments[att].id, 0);
+    if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE) {
+      gl.readPixels(x, this.attachments[att].size.h - y, 1, 1, gl.RGBA, gl.FLOAT, dst);
+    }
+    gl.bindFramebuffer(gl.FRAMEBUFFER, currentTarget);
+
+    return dst;
+  } /* getAttachmentPixel */
 
   resize(size) {
     let gl = this.gl;
@@ -80,7 +102,9 @@ export class Target {
   bind() {
     let gl = this.gl;
 
+    currentTarget = this.FBO;
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.FBO);
+    gl.drawBuffers(this.drawBuffers);
 
     for (let i = 0; i < this.attachments.length; i++)
     gl.clearBufferfv(gl.COLOR, i, [0.00, 0.00, 0.00, 0.00]);
@@ -103,8 +127,26 @@ export class Target {
       gl.viewport(0, 0, Target.defaultFramebuffer.size.w, Target.defaultFramebuffer.size.h);
       gl.clear(WebGL2RenderingContext.COLOR_BUFFER_BIT | WebGL2RenderingContext.DEPTH_BUFFER_BIT);
       gl.clearColor(0.30, 0.47, 0.80, 1.00);
+
+      currentTarget = null;
     }
   }; /* defaultFramebuffer */
+
+  enableDrawBuffer(buffer) {
+    this.drawBuffers[buffer] = WebGL2RenderingContext.COLOR_ATTACHMENT0 + buffer;
+
+    if (currentTarget === this.FBO) {
+      this.gl.drawBuffers(this.drawBuffers);
+    }
+  } /* enableDrawBuffer */
+
+  disableDrawBuffer(buffer) {
+    this.drawBuffers[buffer] = WebGL2RenderingContext.NONE;
+
+    if (currentTarget === this.FBO) {
+      this.gl.drawBuffers(this.drawBuffers);
+    }
+  } /* disableDrawBuffer */
 
   static default(gl) {
     Target.defaultFramebuffer.gl = gl;

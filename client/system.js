@@ -1,17 +1,20 @@
-import {loadShader, Material, Primitive, Topology, Vertex, Texture, Cubemap, UBO, mth} from "./primitive.js";
+import {loadShader, Material, Primitive, EmptyPrimitive, Topology, Vertex, Texture, Cubemap, UBO, mth} from "./primitive.js";
 import {Target} from "./target.js";
 import {Timer} from "./timer.js";
 
-export {Material, Primitive, Topology, Vertex, Texture, Cubemap, UBO, mth};
+export {Material, Primitive, EmptyPrimitive, Topology, Vertex, Texture, Cubemap, UBO, mth};
+
+const mat4Identity = mth.Mat4.identity();
 
 export class System {
   renderQueue;
+  markerRenderQueue;
   gl;
   camera;
   cameraUBO;
 
   target;
-  fsPrimitive = null;
+  fsMaterial = null;
 
   units;  // unit list
   timer;  // timer
@@ -22,9 +25,10 @@ export class System {
   constructor() {
     // WebGL initialization
     let canvas = document.getElementById("canvas");
+    this.canvas = canvas;
 
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    canvas.width = 800;
+    canvas.height = 600;
     let gl = canvas.getContext("webgl2");
     if (gl == null) {
       throw Error("Can't initialize WebGL2");
@@ -41,6 +45,7 @@ export class System {
     gl.depthFunc(WebGL2RenderingContext.LEQUAL);
 
     this.renderQueue = [];
+    this.markerRenderQueue = [];
     this.camera = new mth.Camera();
 
     this.cameraUBO = new UBO(this.gl);
@@ -49,34 +54,44 @@ export class System {
 
     // targets setup
     let size = new mth.Size(canvas.width, canvas.height);
-    this.target = new Target(gl, 1);
+    this.target = new Target(gl, 2);
 
     this.target.resize(size);
     Target.default(gl).resize(size);
 
     // resize handling
     window.onresize = () => {
-      let resolution = new mth.Size(window.innerWidth, window.innerHeight);
+      // let resolution = new mth.Size(window.innerWidth, window.innerHeight);
 
-      canvas.width = resolution.w;
-      canvas.height = resolution.h;
+      // canvas.width = resolution.w;
+      // canvas.height = resolution.h;
 
-      this.camera.resize(resolution);
-      this.target.resize(resolution);
-      Target.default(gl).resize(resolution);
+      // this.camera.resize(resolution);
+      // this.target.resize(resolution);
+      // Target.default(gl).resize(resolution);
     };
 
     this.units = {};
     this.timer = new Timer();
   } /* constructor */
 
-  drawPrimitive(primitive, transform = mth.Mat4.identity()) {
+  static identity = mth.Mat4.identity();
+
+  drawPrimitive(primitive, transform = mat4Identity) {
     this.renderQueue.push({
       primitive: primitive,
       transform: transform,
       id:        this.currentObjectID
     });
   } /* drawPrimitive */
+
+  drawMarkerPrimitive(primitive, transform = mat4Identity) {
+    this.markerRenderQueue.push({
+      primitive: primitive,
+      transform: transform,
+      id:        this.currentObjectID
+    });
+  } /* drawMarkerPrimitive */
 
   createTexture() {
     return new Texture(this.gl, Texture.UNSIGNED_BYTE, 4);
@@ -106,10 +121,14 @@ export class System {
     return Primitive.fromTopology(this.gl, topology, material);
   } /* createPrimitive */
 
+  createEmptyPrimitive(vertexCount, topologyType, material) {
+    return new EmptyPrimitive(this.gl, vertexCount, topologyType, material);
+  } /* createEmptyPrimitive */
+
   async start() {
-    if (this.fsPrimitive == null) {
-      this.fsPrimitive = await this.createPrimitive(Topology.square(), await this.createMaterial("./shaders/target"));
-      this.fsPrimitive.material.textures = this.target.attachments;
+    if (this.fsMaterial == null) {
+      this.fsMaterial = await this.createMaterial("./shaders/target");
+      this.fsMaterial.textures = this.target.attachments;
     }
   } /* start */
   
@@ -132,38 +151,57 @@ export class System {
     for (let i = 0, count = this.renderQueue.length; i < count; i++) {
       let prim = this.renderQueue[i].primitive;
       let trans = this.renderQueue[i].transform;
-
+      
       for (let i = 0; i < 16; i++) {
         cameraInfo[i] = trans.m[i];
       }
       cameraInfo[35] = this.renderQueue[i].id;
-
       this.cameraUBO.writeData(cameraInfo);
-
       prim.draw(this.cameraUBO);
     }
 
+    this.target.disableDrawBuffer(1);
+    for (let i = 0, count = this.markerRenderQueue.length; i < count; i++) {
+      let prim = this.markerRenderQueue[i].primitive;
+      let trans = this.markerRenderQueue[i].transform;
+      
+      for (let i = 0; i < 16; i++) {
+        cameraInfo[i] = trans.m[i];
+      }
+      cameraInfo[35] = this.markerRenderQueue[i].id;
+
+      this.cameraUBO.writeData(cameraInfo);
+      prim.draw(this.cameraUBO);
+    }
+    this.target.enableDrawBuffer(1);
+
     // flush render queue
     this.renderQueue = [];
+    this.markerRenderQueue = [];
 
     // rendering to screen framebuffer
     Target.default(gl).bind();
-    this.fsPrimitive.draw(this.cameraUBO);
+    EmptyPrimitive.drawFromParams(this.gl, 4, Topology.TRIANGLE_STRIP, this.fsMaterial, this.cameraUBO);
   } /* end */
 
-
-  static isPromise = function(v) {
-    return v => typeof(v) === "object" && typeof v.then === "function";
+  static isPromise(v) {
+    return typeof(v) === "object" && typeof v.then === "function";
   } /* isPromise */
 
-  async addUnit(createFunction) {
-    let val = createFunction(this);
-
-    if (System.isPromise(val)) {
-      val = await val;
+  static async unpackPromise(v) {
+    if (System.isPromise(v)) {
+      return await v;
     }
+    return v;
+  } /* unpackPromise */
+
+  async addUnit(createFunction) {
+    let val = await System.unpackPromise(createFunction(this));
 
     val.systemId = this.lastUnitID++;
+    if (val.init != undefined) {
+      await System.unpackPromise(val.init(this));
+    }
     this.units[val.systemId] = val;
 
     return val;
@@ -172,6 +210,18 @@ export class System {
   getUnitByID(id) {
     return this.units[id];
   } /* getUnitByID */
+
+  getUnitByCoord(x, y) {
+    let id = Math.round(this.target.getAttachmentValue(0, x, y)[3]);
+
+    return this.units[id];
+  } /* getUnitByMouseLocation */
+
+  getPositionByCoord(x, y) {
+    let arr = this.target.getAttachmentValue(1, x, y);
+
+    return new mth.Vec3(arr[0], arr[1], arr[2]);
+  } /* getPositionByCoord */
 
   run() {
     let system = this;
@@ -186,6 +236,10 @@ export class System {
 
         system.currentObjectID = unit.systemId;
         unit.response(system);
+
+        if (unit.doSuicide === true) {
+          delete system.units[id];
+        }
       }
 
       system.end();

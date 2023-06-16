@@ -13,7 +13,7 @@ uniform projectionInfo {
 uniform sampler2D Texture0;
 
 in vec2 drawTexCoord;
-in vec2 inAngles;
+in float drawID;
 
 #define PI 3.1415926535
 
@@ -23,7 +23,7 @@ void main() {
   float azimuth = sign(dir.z) * acos(dir.x / length(dir.xz));
   float elevator = acos(dir.y / length(dir));
 
-  outColorID = vec4(texture(Texture0, vec2((azimuth / PI + 1.0) / 2.0, elevator / PI)).xyz, 0);
+  outColorID = vec4(texture(Texture0, vec2((azimuth / PI + 1.0) / 2.0, elevator / PI)).xyz, drawID);
 } /* main */
 
 /* default_pbr.frag */

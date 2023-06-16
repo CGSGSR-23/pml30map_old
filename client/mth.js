@@ -31,7 +31,15 @@ export class Vec3 {
   length() {
     return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
   } /* length */
-  
+
+  distance(m2) {
+    let
+      dx = this.x - m2.x,
+      dy = this.y - m2.y,
+      dz = this.z - m2.z;
+    return Math.sqrt(dx * dx + dy * dy + dz * dz);
+  } /* distance */
+
   dot(m2) {
     return this.x * m2.x + this.y * m2.y + this.z * m2.z;
   } /* dot */
@@ -108,6 +116,10 @@ export class Vec2 {
 
     return new Vec2(this.x / len, this.y / len);
   } /* normalize */
+
+  right() {
+    return new Vec2(this.y, -this.x);
+  } /* right */
 } /* Vec2 */
 
 export class Size {
@@ -159,7 +171,7 @@ export class Mat4 {
 
   transform4x4(v)
   {
-    let w = V.x * this.m[3] + V.y * this.m[7] + V.z * this.m[11] + this.m[15];
+    let w = v.x * this.m[3] + v.y * this.m[7] + v.z * this.m[11] + this.m[15];
   
     return new Vec3(
       (v.x * this.m[ 0] + v.y * this.m[ 4] + v.z * this.m[ 8] + this.m[12]) / w,
@@ -260,6 +272,18 @@ export class Mat4 {
       0, 0, 0, 1
     );
   } /* rotateZ */
+
+  static rotate(angle, axis) {
+    let v = axis.normalize();
+    let s = Math.sin(angle), c = Math.cos(angle);
+
+    return new Mat4(
+      v.x * v.x * (1 - c) + c,         v.x * v.y * (1 - c) - v.z * s,   v.x * v.z * (1 - c) + v.y * s,   0,
+      v.y * v.x * (1 - c) + v.z * s,   v.y * v.y * (1 - c) + c,         v.y * v.z * (1 - c) - v.x * s,   0,
+      v.z * v.x * (1 - c) - v.y * s,   v.z * v.y * (1 - c) + v.x * s,   v.z * v.z * (1 - c) + c,         0,
+      0,                               0,                               0,                               1
+    );
+  } /* rotate */
 
   static view(loc, at, up) {
     let

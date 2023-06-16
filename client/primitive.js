@@ -78,6 +78,39 @@ export class Topology {
     return tpl;
   } /* planeIndexed */
 
+  static plane(width = 30, height = 30) {
+    let tpl = Topology.#planeIndexed(width, height);
+
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        tpl.vtx[y * width + x] = Vertex.fromCoord(
+          x, 0, y,
+          x / (width - 1), y / (height - 1),
+          0, 1, 0
+        );
+      }
+    }
+
+    return tpl;
+  } /* plane */
+
+  static cone(size = 30) {
+    let tpl = new Topology([], []);
+
+    tpl.vtx.push(Vertex.fromCoord(0, 1, 0));
+    for (let i = 0; i < size; i++) {
+      let a = i / (size - 1) * Math.PI * 2;
+
+      tpl.vtx.push(Vertex.fromCoord(Math.cos(a), 0, Math.sin(a)));
+
+      tpl.idx.push(i % size + 1);
+      tpl.idx.push(0);
+      tpl.idx.push((i + 1) % size + 1);
+    }
+
+    return tpl;
+  } /* cone */
+
   static sphere(radius = 1, width = 30, height = 30) {
     let tpl = Topology.#planeIndexed(width, height);
 
@@ -208,6 +241,37 @@ export class Topology {
   } /* getIndicesAsUintArray */
 } /* Topology */
 
+export class EmptyPrimitive {
+  gl;
+  material;
+  geometryType = Topology.TRIANGLES;
+  vertexCount = 4;
+
+  constructor(glContext, vertexCount = 4, geometryType = Topology.TRIANGLES, material = null) {
+    this.gl = glContext;
+    this.vertexCount = vertexCount;
+    this.geometryType = geometryType;
+    this.material = material;
+  } /* constructor */
+
+  draw(cameraBuffer = null) {
+    this.material.apply();
+    if (cameraBuffer != null) {
+      cameraBuffer.bind(this.material.shader, 1, "cameraBuffer");
+    }
+    this.gl.drawArrays(Topology.geometryTypeToGL(this.geometryType), 0, this.vertexCount);
+  } /* draw */
+
+  static drawFromParams(gl, vertexCount, geometryType, material, cameraBuffer = null) {
+    material.apply();
+
+    if (cameraBuffer != null) {
+      cameraBuffer.bind(material.shader, 1, "cameraBuffer");
+    }
+    gl.drawArrays(Topology.geometryTypeToGL(geometryType), 0, vertexCount);
+  } /* drawFromParams */
+} /* EmptyPrimitive */
+
 export class Primitive {
   gl;
   vertexArrayObject = null;
@@ -239,6 +303,47 @@ export class Primitive {
       gl.drawArrays(Topology.geometryTypeToGL(this.geometryType), 0, this.vertexNumber);
     }
   } /* draw */
+
+  cloneWithNewMaterial(material = null) {
+    if (material === null) {
+      material = this.material;
+    }
+
+    let gl = this.gl;
+    let prim = new Primitive(gl);
+
+    prim.material = material;
+
+    prim.vertexBuffer = this.vertexBuffer;
+    prim.vertexCount = this.vertexCount;
+
+    prim.vertexArrayObject = gl.createVertexArray();
+    gl.bindVertexArray(prim.vertexArrayObject);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, prim.vertexBuffer);
+
+    // Map vertex layout
+    let positionLocation = gl.getAttribLocation(prim.material.shader, "inPosition");
+    if (positionLocation != -1) {
+      gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 8 * 4, 0);
+      gl.enableVertexAttribArray(positionLocation);
+    }
+
+    let texCoordLocation = gl.getAttribLocation(prim.material.shader, "inTexCoord");
+    if (texCoordLocation != -1) {
+      gl.vertexAttribPointer(texCoordLocation, 3, gl.FLOAT, false, 8 * 4, 3 * 4);
+      gl.enableVertexAttribArray(texCoordLocation);
+    }
+
+    let normalLocation = gl.getAttribLocation(prim.material.shader, "inNormal");
+    if (normalLocation != -1) {
+      gl.vertexAttribPointer(normalLocation, 3, gl.FLOAT, false, 8 * 4, 5 * 4);
+      gl.enableVertexAttribArray(normalLocation);
+    }
+
+    prim.indexBuffer = this.indexBuffer;
+    prim.indexCount = this.indexCount;
+  } /* cloneWithNewMaterial */
 
   static async fromTopology(gl, tpl, material) {
     let prim = new Primitive(gl);
