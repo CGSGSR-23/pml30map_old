@@ -111,6 +111,21 @@ export class Topology {
     return tpl;
   } /* cone */
 
+  static cylinder(size=30) {
+    let tpl = new Topology([]);
+    tpl.type = this.TRIANGLE_STRIP;
+
+    for (let i = 0; i <= size; i++) {
+      let a = i / (size - 2) * Math.PI * 2;
+      let ca = Math.cos(a), sa = Math.sin(a);
+
+      tpl.vtx.push(Vertex.fromCoord(ca, 0, sa));
+      tpl.vtx.push(Vertex.fromCoord(ca, 1, sa));
+    }
+
+    return tpl;
+  } /* cylinder */
+
   static sphere(radius = 1, width = 30, height = 30) {
     let tpl = Topology.#planeIndexed(width, height);
 

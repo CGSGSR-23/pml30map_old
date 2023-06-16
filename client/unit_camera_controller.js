@@ -5,7 +5,7 @@ export class Arcball {
     // camera unit
     static create() {
     const up = new mth.Vec3(0, 1, 0);
-    let loc = new mth.Vec3(19.88, 11.67, 9.20), at = new mth.Vec3(8.90, 5.32, -4.65);
+    let loc = new mth.Vec3(30, 30, 30), at = new mth.Vec3(0, 0, 0);
     let radius = at.sub(loc).length();
 
     let camera = {
