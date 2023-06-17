@@ -6,7 +6,10 @@ import * as cameraController from "./camera_controller.js";
 import {Banner} from "./banner.js";
 import {Skysphere} from "./skysphere.js";
 
+import {Connection} from "./nodes.js";
+
 let system = new rnd.System();
+let serverConnection = new Connection();
 
 // add necessary
 system.addUnit(cameraController.Arcball.create);
@@ -136,6 +139,11 @@ async function createConnection(firstNode, secondNode) {
   return unit;
 } /* createConnection */
 
+function destroyConnection(connection) {
+  connection.doSuicide = true;
+  delete connections[connection.connectionID];
+} /* destroyConnection */
+
 // update transform matrices of all connections with node.
 function updateConnectionTransforms(node = null) {
   for (const [key, value] of Object.entries(connections)) {
@@ -224,7 +232,7 @@ const editorConnections = await system.addUnit(async function() {
   let eventPair = null;
 
   system.canvas.addEventListener("mousedown", (event) => {
-    if (event.buttons & 1 === 1 && !event.shiftKey) {
+    if ((event.buttons & 2) === 2 && !event.shiftKey && event.altKey) {
       pointEvent = {
         x: event.clientX,
         y: event.clientY
@@ -252,6 +260,8 @@ const editorConnections = await system.addUnit(async function() {
           eventPair.first.bannerPromise = Banner.create(system, unit.pos.add(new mth.Vec3(0, 4, 0)), "First element");
         } else {
           eventPair.second = pointEvent;
+
+          // erase banner
           eventPair.first.bannerPromise.then(banner => banner.doSuicide = true);
           // refuse connection with invalid banner
           if (eventPair.first.unit.doSuicide) {
@@ -269,16 +279,23 @@ const editorConnections = await system.addUnit(async function() {
   };
 }); /* editorConnections */
 
-let inputElements = {
+let nodeParameters = document.getElementById("nodeParameters");
+let nodeInputParameters = {
   nodeID: document.getElementById("nodeID"),
   nodeName: document.getElementById("nodeName"),
   skyspherePath: document.getElementById("skyspherePath"),
   deleteNode: document.getElementById("deleteNode")
 };
 
+let connectionParameters = document.getElementById("connectionParameters");
+let connectionInputParameters = {
+  deleteConnection: document.getElementById("deleteConnection")
+};
+
 // node pointing unit
-let doMoveUnit = true;
+let doMoveNode = true;
 let activeContentShowNode = null;
+let activeContentShowConnection = null;
 
 // current unit selector
 let activeBannerShowUnit = null;
@@ -306,39 +323,59 @@ system.canvas.addEventListener("mousemove", (event) => {
 
 // unit content show selector
 system.canvas.addEventListener("mousedown", (event) => {
+  if ((event.buttons & 1) !== 1) {
+    return;
+  }
+
   let unit = system.getUnitByCoord(event.clientX, event.clientY);
 
-  if (unit === undefined || unit.type != "node") {
-    inputElements.nodeID.innerText = "";
-    inputElements.nodeName.value = "";
-    inputElements.skyspherePath.value = "";
+  nodeInputParameters.nodeID.innerText = "";
+  nodeInputParameters.nodeName.value = "";
+  nodeInputParameters.skyspherePath.value = "";
 
-    activeContentShowNode = null;
-    doMoveUnit = false;
-  } else {
-    inputElements.nodeID.innerText = unit.nodeID;
-    inputElements.nodeName.value = unit.name;
-    inputElements.skyspherePath.value = unit.skyspherePath;
+  activeContentShowNode = null;
+  activeContentShowConnection = null;
+  doMoveNode = false;
+
+  if (unit === undefined) {
+    return;
+  }
+
+  if (unit.type === "node") {
+    nodeParameters.removeAttribute("hidden");
+    connectionParameters.setAttribute("hidden", "");
+
+    nodeInputParameters.nodeID.innerText = unit.nodeID;
+    nodeInputParameters.nodeName.value = unit.name;
+    nodeInputParameters.skyspherePath.value = unit.skyspherePath;
 
     activeContentShowNode = unit;
     if (event.shiftKey) {
-      doMoveUnit = true;
+      doMoveNode = true;
     }
+  } else if (unit.type === "connection") {
+    nodeParameters.setAttribute("hidden", "");
+    connectionParameters.removeAttribute("hidden");
+
+    activeContentShowConnection = unit;
+  } else {
+    nodeParameters.setAttribute("hidden", "");
+    connectionParameters.setAttribute("hidden", "");
   }
 }); /* event system.canvas:"mousedown" */
 
 system.canvas.addEventListener("mouseup", (event) => {
-  doMoveUnit = false;
+  doMoveNode = false;
 }); /* event system.canvas:"mouseup" */
 
 system.canvas.addEventListener("mousemove", (event) => {
-  if (activeContentShowNode !== null && doMoveUnit) {
+  if (activeContentShowNode !== null && doMoveNode) {
     let position = system.getPositionByCoord(event.clientX, event.clientY);
 
     if (position.x !== position.y && position.y !== position.z) {
       activeContentShowNode.pos = position;
     } else {
-      doMoveUnit = false;
+      doMoveNode = false;
     }
   }
 }); /* event system.canvas:"mousemove" */
@@ -346,25 +383,32 @@ system.canvas.addEventListener("mousemove", (event) => {
 
 // current unit controls
 
-inputElements.nodeName.addEventListener("change", () => {
-  if (currentUnit !== null) {
-    activeContentShowNode.name = inputElements.nodeName.value;
+nodeInputParameters.nodeName.addEventListener("change", () => {
+  if (activeContentShowNode !== null) {
+    activeContentShowNode.name = nodeInputParameters.nodeName.value;
   }
-}); /* event inputElements.nodeName:"change" */
+}); /* event nodeInputParameters.nodeName:"change" */
 
-inputElements.skyspherePath.addEventListener("change", () => {
-  if (currentUnit !== null) {
-    activeContentShowNode.skyspherePath = inputElements.skyspherePath.value;
+nodeInputParameters.skyspherePath.addEventListener("change", () => {
+  if (activeContentShowNode !== null) {
+    activeContentShowNode.skyspherePath = nodeInputParameters.skyspherePath.value;
   }
   console.log(Object.keys(connections).length);
-}); /* event inputElements.skyspherePath:"change" */
+}); /* event nodeInputParameters.skyspherePath:"change" */
 
-inputElements.deleteNode.addEventListener("click", () => {
-  if (currentUnit !== null) {
+nodeInputParameters.deleteNode.addEventListener("click", () => {
+  if (activeContentShowNode !== null) {
     destroyNode(activeContentShowNode);
     activeContentShowNode = null;
   }
-}); /* event inputElements.deleteNode:"click" */
+}); /* event nodeInputParameters.deleteNode:"click" */
+
+connectionInputParameters.deleteConnection.addEventListener("click", () => {
+  if (activeContentShowConnection !== null) {
+    destroyConnection(activeContentShowConnection);
+    activeContentShowConnection = null;
+  }
+}); /* event connectionInputParameters.deleteConnection:"click" */
 
 // start system
 system.run();

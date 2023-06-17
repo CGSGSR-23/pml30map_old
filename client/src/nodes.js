@@ -13,7 +13,7 @@ export class Connection {
   getDefNodeURIRes;
 
   constructor() {
-    console.log("Connection constructor");
+    console.log("Connected with server");
 
     this.socket = io();
 
@@ -25,7 +25,7 @@ export class Connection {
         if (this.getNodeRes != undefined)
           this.getNodeRes(msg);
       });
-
+      
       this.socket.on("addNodeRes", (msg)=>{
         console.log(msg);
         if (this.addNodeRes != undefined)
@@ -49,7 +49,7 @@ export class Connection {
         if (this.disconnectNodesRes != undefined)
           this.disconnectNodesRes(msg);
       });
-
+      
       this.socket.on("setDefNodeURIRes", (msg)=>{
         console.log(msg);
         if (this.setDefNodeURIRes != undefined)
@@ -67,7 +67,7 @@ export class Connection {
         if (this.getNodeConnectionsReq != undefined)
           this.getNodeConnectionsReq(msg);
       });
-
+      
       this.socket.on("getAllNodesRes", (msg)=>{
         console.log(msg);
         if (this.getAllNodesRes != undefined)
@@ -77,39 +77,66 @@ export class Connection {
     });
   } /* constructor */
 
-  getNodeReq( uri ) {
-    this.socket.emit("getNodeReq", uri);
-  } /* getNodeReq */
 
-  addNodeReq( data ) {
-    this.socket.emit("addNodeReq", data);
-  }
+  async send( req, ...args ) {
+    //let out;
 
-  getAllNodesReq() {
-    this.socket.emit("getAllNodesReq");
-  }
+    //await this.socket.emit(req, ( result )=>{
+    //  out = result;
+    //  console.log(result);
+    //});
 
-  delNodeReq( node ) {
-    this.socket.emit("delNodeReq", node);
-  }
+    //return out;
 
-  connectNodesReq( uri1, uri2 ) {
-    this.socket.emit("connectNodesReq", [uri1, uri2]);
-  }
+    console.log("TEST ARGS:");
+    console.log(args);
 
-  getNodeConnectionsReq( uri ) {
-    this.socket.emit("getNodeConnectionsReq", uri);
-  }
+    return new Promise((resolve) => {
+      this.socket.emit(req, ...args, (response) => {
+        console.log("TEST OUT:");
+        console.log(response);
+        resolve(response);
+      });
+    });
+  } /* send */
 
-  disconnectNodesReq( uri1, uri2 ) {
-    this.socket.emit("disconnectNodesReq", [uri1, uri2]);
-  }
+  async ping( value ) {
+    return this.send("ping", value );
+  } /* ping */
 
-  setDefNodeURIReq( uri ) {
-    this.socket.emit("setDefNodeURIReq", uri);
-  }
+  async getNode( uri ) {
+    return this.send("getNodeReq", uri);
+  } /* getNode */
 
-  getDefNodeURIReq() {
-    this.socket.emit("getDefNodeURIReq");
-  }
+  async addNode( data ) {
+    return this.send("addNodeReq", data);
+  } /* addNode */
+
+  async getAllNodes() {
+    return this.send("getAllNodesReq");
+  } /* getAllNodes */
+
+  async delNode( node ) {
+    return this.send("delNodeReq", node);
+  } /* delNode */
+
+  async connectNodes( uri1, uri2 ) {
+    return this.send("connectNodesReq", [uri1, uri2]);
+  } /* connectNodes */
+
+  async getNodeConnections( uri ) {
+    return this.send("getNodeConnectionsReq", uri);
+  } /* getNodeConnections */
+
+  async disconnectNodes( uri1, uri2 ) {
+    return this.send("disconnectNodesReq", [uri1, uri2]);
+  } /* disconnectNodes */
+
+  async setDefNodeURI( uri ) {
+    return this.send("setDefNodeURIReq", uri);
+  } /* setDefNodeURI */
+
+  async getDefNodeURI() {
+    return this.send("getDefNodeURIReq");
+  } /* getDefNodeURI */
 } /* Connection */

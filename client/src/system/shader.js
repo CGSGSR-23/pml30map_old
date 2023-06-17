@@ -1,17 +1,3 @@
-async function loadShaderModule(gl, type, path) {
-  let src = await fetch(path).then(response => response.text());
-  let shader = gl.createShader(type);
-
-  gl.shaderSource(shader, src);
-  gl.compileShader(shader);
-
-  let res = gl.getShaderInfoLog(shader);
-  if (res != null && res.length > 0)
-    console.error(`Shader module compilation error: ${res}`);
-
-  return await shaderModuleFromSource(gl, type, await fetch(path).then((response, ok) => ok ? response : null));
-} /* loadShaderModule */
-
 function shaderModuleFromSource(gl, type, source) {
   if (source == null) {
     return null;

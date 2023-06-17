@@ -125,13 +125,9 @@ export class System {
     return new EmptyPrimitive(this.gl, vertexCount, topologyType, material);
   } /* createEmptyPrimitive */
 
-  async start() {
-    if (this.fsMaterial == null) {
-      this.fsMaterial = await this.createMaterial("./shaders/target");
-      this.fsMaterial.textures = this.target.attachments;
-    }
+  start() {
   } /* start */
-  
+
   end() {
     // rendering in target
     let gl = this.gl;
@@ -184,14 +180,8 @@ export class System {
     EmptyPrimitive.drawFromParams(this.gl, 4, Topology.TRIANGLE_STRIP, this.fsMaterial, this.cameraUBO);
   } /* end */
 
-  static isPromise(v) {
-    return typeof(v) === "object" && typeof v.then === "function";
-  } /* isPromise */
-
+  // genious function, but it works!
   static async unpackPromise(v) {
-    if (System.isPromise(v)) {
-      return await v;
-    }
     return v;
   } /* unpackPromise */
 
@@ -223,13 +213,17 @@ export class System {
     return new mth.Vec3(arr[0], arr[1], arr[2]);
   } /* getPositionByCoord */
 
-  run() {
+  async run() {
+    // initialize fullscreen material
+    this.fsMaterial = await this.createMaterial("./shaders/target");
+    this.fsMaterial.textures = this.target.attachments;
+
     let system = this;
 
     const run = async function() {
       system.timer.response();
 
-      await system.start();
+      system.start();
 
       for (const id in system.units) {
         let unit = system.units[id];

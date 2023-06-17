@@ -1,6 +1,5 @@
 import * as rnd from "./system/system.js";
 
-
 let bannerShader = null;
 
 export class Banner {

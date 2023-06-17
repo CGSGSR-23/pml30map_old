@@ -10,12 +10,16 @@
     <script type="module" src="./bundle.js"></script>
 
     <div>
-      <table>
+      <table id="nodeParameters">
         <th>Node parameters</th>
         <tr> <td>Node ID:       </td> <td><t id="nodeID"></t>                   </td> </tr>
         <tr> <td>Node name:     </td> <td><input type="text" id="nodeName">     </td> </tr>
         <tr> <td>Skysphere path:</td> <td><input type="text" id="skyspherePath"></td> </tr>
         <tr> <td><input type="button" id="deleteNode" value="Delete node"></td></tr>
+      </table>
+      <table id="connectionParameters" hidden>
+        <th>Connection parameters</th>
+        <tr> <td><input type="button" id="deleteConnection" value="Delete connection"></td></tr>
       </table>
     </div>
   </body>
