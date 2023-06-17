@@ -53,13 +53,25 @@
         <input id="getNodeButton" type="button" value="get node">
       </label><br/>
       <label>
+        <input id="updateNodeButton" type="button" value="update node">
+      </label><br/>
+      <label>
         <input id="delNodeButton" type="button" value="del node">
       </label><br/>
       <label>
-        <input id="getNodeConnectionsButton" type="button" value="get all con">
+        <input id="getNodeConnectionsButton" type="button" value="get node con">
+      </label><br/>
+      <label>
+        <input id="getAllConnectionsButton" type="button" value="get all con">
       </label><br/>
       <label>
         <input id="getAllNodesButton" type="button" value="get all nodes">
+      </label><br/>
+      <label>
+        <input id="getAllNodesDataButton" type="button" value="get all nodes data">
+      </label><br/>
+      <label>
+        <input id="getNeighboursButton" type="button" value="get neighbours">
       </label><br/>
       <label>
         <input id="pingButton" type="button" value="ping">
@@ -122,6 +134,24 @@
           await connection.delNode(new Uint8Array(JSON.parse(uriStr)));
         };
 
+        document.getElementById("updateNodeButton").onclick = async ()=>{
+          const imgF = document.getElementById("addNodeImageFile").files[0];
+          const posV = [
+            document.getElementById("addNodePosX").value,
+            document.getElementById("addNodePosY").value,
+            document.getElementById("addNodePosZ").value,
+          ];
+
+          const data = {
+            //img: imgF.name,
+            pos: posV
+          };
+
+          let uriStr = document.getElementById("nodeURI").value;
+          let result = await connection.updateNode(new Uint8Array(JSON.parse(uriStr)), data);
+          console.log();
+        };
+
         document.getElementById("getAllNodesButton").onclick = async ()=>{
           let nodes = await connection.getAllNodes();
           console.log(nodes);
@@ -131,6 +161,13 @@
           for (let i = 0; i < nodes.length; i++)
             str += "[" + new Uint8Array(nodes[i]).toString() + "],";
           document.getElementById("outputField").innerText = str + "]";
+        };
+
+        document.getElementById("getAllNodesDataButton").onclick = async ()=>{
+          let nodes = await connection.getAllNodesData();
+          console.log(nodes);
+
+          document.getElementById("outputField").innerText = JSON.stringify(nodes);
         };
   
         document.getElementById("connectNodesButton").onclick = async ()=>{
@@ -146,9 +183,22 @@
         };
         
         document.getElementById("getNodeConnectionsButton").onclick = async ()=>{
-          let uri = document.getElementById("nodeURI").value
-          await connection.getNodeConnections(uri);
+          let uri = document.getElementById("nodeURI").value;
+          let cons = await connection.getNodeConnections(uri);
         };
+        document.getElementById("getAllConnectionsButton").onclick = async ()=>{
+          let cons = await connection.getAllConnections();
+        };
+
+        document.getElementById("getNeighboursButton").onclick = async ()=>{
+          let uri = document.getElementById("nodeURI").value;
+          let ns = await connection.getNeighbours(uri);
+          //let outStr = "";
+
+          //for (let i = 0; i < ns.length; i++)
+          //  outStr = outStr + ns[i]
+        };
+  
   
         document.getElementById("setDefNodeButton").onclick = async ()=>{
           let uriStr = document.getElementById("nodeURI").value;
@@ -163,8 +213,8 @@
           document.getElementById("outputField").innerText = uriStr;
         };
         
-        document.getElementById("pingButton").onclick = ()=>{
-          connection.ping();
+        document.getElementById("pingButton").onclick = async ()=>{
+          document.getElementById("outputField").innerText = await connection.ping(47);
         };
       </script>
     </div>

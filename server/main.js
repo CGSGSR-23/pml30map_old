@@ -44,6 +44,11 @@ class NodesDB { // Nodes data base
     var node = await this.nodesC.findOne({_id: new ObjectId(uri)});
     return node;
   }
+
+  async updateNode( uri, newData ) {
+    var result = await this.nodesC.updateOne({_id: new ObjectId(uri)}, { $set: newData });
+    return result;
+  }
   
   async delNode( uri ) {
     return await this.nodesC.deleteOne({_id: new ObjectId(uri)});
@@ -58,7 +63,13 @@ class NodesDB { // Nodes data base
   }
 
   async getNodeConnections( uri ) {
-    let cs = (await (await this.connectionsC.find({ id1: uri })).toArray()).concat((await (await this.connectionsC.find({ id1: uri })).toArray()));
+    let cs = (await (await this.connectionsC.find({ id1: uri })).toArray()).concat((await (await this.connectionsC.find({ id2: uri })).toArray()));
+    
+    return cs;
+  }
+
+  async getAllConnections() {
+    let cs = await (await this.connectionsC.find({})).toArray();
     
     return cs;
   }
@@ -72,6 +83,7 @@ class NodesDB { // Nodes data base
       outN[outN.length] = right[i].id2;
     for (let i = 0; i < left.length; i++)
       outN[outN.length] = left[i].id1;
+    return outN;
   }
   //////////////////// Connections
 
@@ -124,6 +136,12 @@ class NodesDB { // Nodes data base
       outURIs[i] = nodes[i]._id.id;
     
     return outURIs;
+  }
+
+  async getAllNodesData() {
+    let nodes = await (await this.nodesC.find({})).toArray();
+    
+    return nodes;
   }
 }
 
@@ -183,14 +201,8 @@ async function main() {
       console.log(output);
     }
 
-    socket.on("ping", (res)=>{
-      res(10);
-    });
-
-    socket.on("getNodeReq", async ( uri, res )=>{
-      let outData = await nodesDB.getNode(uri);
-      LogMsg("getNodeReq", uri, outData);
-      res(outData);
+    socket.on("ping", (value, res)=>{
+      res(value);
     });
 
     socket.on("getNodeReq", async ( uri, res )=>{
@@ -205,14 +217,37 @@ async function main() {
       res(newURI);
     });
 
-    socket.on("delNodeReq", ( uri, res )=>{
-      LogMsg("delNodeReq", uri, "");
-      res();
+    socket.on("delNodeReq", async ( uri, res )=>{
+      let result = await nodesDB.delNode(uri);
+      if (result.deletedCount === 1)
+        result = true;
+      else
+        result = false;
+
+      LogMsg("delNodeReq", uri, result);
+      res(result);
+    });
+
+    socket.on("updateNodeReq", async ( uri, data, res )=>{
+      let result = await nodesDB.updateNode(uri, data);
+    
+      if (result.modifiedCount === 1)
+        result = true;
+      else
+        result = false;
+      LogMsg("updateNodeReq", {uri, data}, result);
+      return result; 
     });
 
     socket.on("getAllNodesReq", async ( res )=>{
       let outData = await nodesDB.getAllNodeURIs();
       LogMsg("getAllNodesReq", "", outData);
+      res(outData);
+    });
+
+    socket.on("getAllNodesDataReq", async ( res )=>{
+      let outData = await nodesDB.getAllNodesData();
+      LogMsg("getAllNodesDataReq", "", outData);
       res(outData);
     });
 
@@ -244,6 +279,18 @@ async function main() {
       let cs = await nodesDB.getNodeConnections(uri);
       LogMsg("getNodeConnectionsReq", uri, cs);
       res(cs);
+    });
+
+    socket.on("getAllConnectionsReq", async ( res )=>{
+      let cs = await nodesDB.getAllConnections();
+      LogMsg("getAllConnectionsReq", "", cs);
+      res(cs);
+    });
+
+    socket.on("getNeighboursReq", async ( uri, res )=>{
+      let nNodes = await nodesDB.getNeighbours(uri);
+      LogMsg("getNeighboursReq", uri, nNodes);
+      res(nNodes);
     });
 
     socket.on("disconnect", () => {
