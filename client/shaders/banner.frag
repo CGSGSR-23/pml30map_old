@@ -14,7 +14,7 @@ uniform sampler2D Texture0;
 void main() {
   vec3 color = texture(Texture0, drawTexCoord).xyz;
 
-  if (color.r + color.g + color.b <= 0.4)
+  if (color.r + color.g + color.b <= 2.0)
     discard;
 
   outColorID = vec4(color, drawID);

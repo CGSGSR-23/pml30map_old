@@ -38,8 +38,8 @@ const vec2 texCoords[4] = vec2[4](
 void main() {
   vec3 position =
     bannerLocationHeight.xyz +
-    cameraRight.xyz * positions[gl_VertexID].x +
-    cameraUp.xyz    * (positions[gl_VertexID].y + bannerLocationHeight.w);
+    cameraRight.xyz * positions[gl_VertexID].x * 1.5 +
+    cameraUp.xyz    * (positions[gl_VertexID].y + bannerLocationHeight.w) * 1.5;
 
   gl_Position = (transformViewProj * transformWorld) * vec4(position, 1);
   drawPosition = (transformWorld * vec4(position, 1)).xyz;

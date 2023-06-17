@@ -14,12 +14,12 @@ let skysphere = await system.addUnit(Skysphere.create, "./bin/imgs/lakhta.png");
 let cameraController = system.addUnit(Rotator.create);
 
 let arrowMaterial = await system.createMaterial("./shaders/arrow");
-let arrowPrim = await system.createPrimitive(rnd.Topology.square(), arrowMaterial);//system.createEmptyPrimitive(4, rnd.Topology.TRIANGLE_STRIP, arrowMaterial);
+let arrowPrim = await system.createPrimitive(rnd.Topology.square(), arrowMaterial);
 let arrowUniqueID = 0;
 let arrows = [];
 
 async function createArrow(direction) {
-  let transform = mth.Mat4.rotateY(Math.atan2(direction.z, direction.x));
+  let transform = mth.Mat4.rotateY(-Math.atan2(direction.z, direction.x));
 
   let arrow = await system.addUnit(() => {
     return {
@@ -45,6 +45,9 @@ function clearArrows() {
 } /* clearArrows */
 
 let currentNodeName = document.getElementById("currentNodeName");
+let skysphereRotation = document.getElementById("skysphereRotation");
+
+const skysphereFolderPath = "./bin/imgs/";
 
 let currentNode = null;
 let currentNodeURI = null;
@@ -55,10 +58,11 @@ async function setCurrentNode(nodeURI) {
   currentNode = await server.getNode(nodeURI);
   currentNodeURI = nodeURI;
   console.log(currentNode);
+  skysphereRotation.value = currentNode.skysphere.rotation / (Math.PI * 2) * 314;
   currentNode.position = mth.Vec3.fromObject(currentNode.position);
   currentNodeName.innerText = currentNode.name;
 
-  skysphere.texture.load(currentNode.skysphere.path);
+  skysphere.texture.load(skysphereFolderPath + currentNode.skysphere.path);
   skysphere.rotation = currentNode.skysphere.rotation;
 
   let neighbourURIs = await server.getNeighbours(nodeURI);
@@ -99,14 +103,13 @@ document.getElementById("toEditor").addEventListener("click", () => {
   window.location.href = "./index.html";
 }); /* event document.getElementById("toEditor"):"click" */
 
-let skysphereRotation = document.getElementById("skysphereRotation");
 skysphereRotation.addEventListener("input", (event) => {
-  let angle = skysphereRotation.value * (Math.PI * 2 / 100.0);
+  let angle = skysphereRotation.value / 314 * Math.PI * 2;
 
   skysphere.rotation = angle;
   server.updateNode(currentNodeURI, {
     skysphere: {
-      rotation: currentNode.skysphere.rotation + angle,
+      rotation: angle,
       path: currentNode.skysphere.path,
     }
   });

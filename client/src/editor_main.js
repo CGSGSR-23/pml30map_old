@@ -409,7 +409,7 @@ system.canvas.addEventListener("mousedown", (event) => {
     nodeParameters.removeAttribute("hidden");
     connectionParameters.setAttribute("hidden", "");
 
-    nodeInputParameters.nodeID.innerText = unit.nodeID;
+    nodeInputParameters.nodeID.innerText = unit.nodeID.toStr();
     nodeInputParameters.nodeName.value = unit.name;
     nodeInputParameters.skyspherePath.value = unit.skysphere.path;
 
