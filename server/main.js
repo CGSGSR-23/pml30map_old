@@ -133,7 +133,7 @@ class NodesDB { // Nodes data base
       await this.varsC.insertOne({var_name: "DefNodeURI", uri: newURI});
     }
     else
-      node.uri = newURI;
+      await this.varsC.updateOne({var_name: "DefNodeURI" }, { $set: { uri: newURI }});
     return true;
   }
 
@@ -187,7 +187,6 @@ async function main() {
       });
       res.end(JSON.stringify({status: 'success', node_uri: nodeURI}));
     });
-
   });
 
   // For test
