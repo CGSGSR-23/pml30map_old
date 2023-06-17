@@ -172,23 +172,30 @@
         };
   
         document.getElementById("connectNodesButton").onclick = async ()=>{
-          let uri1 = document.getElementById("firstNodeURI").value,
-              uri2 = document.getElementById("secondNodeURI").value;
+          let uri1 = new URI(document.getElementById("firstNodeURI").value);
+          let uri2 = new URI(document.getElementById("secondNodeURI").value);
           await connection.connectNodes(uri1, uri2);
         };
   
         document.getElementById("disconnectNodesButton").onclick = async ()=>{
-          let uri1 = document.getElementById("firstNodeURI").value,
-              uri2 = document.getElementById("secondNodeURI").value;
+          let uri1 = new URI(document.getElementById("firstNodeURI").value);
+          let uri2 = new URI(document.getElementById("secondNodeURI").value);
+          
           await connection.disconnectNodes(uri1, uri2);
         };
         
         document.getElementById("getNodeConnectionsButton").onclick = async ()=>{
           let uri = new URI(document.getElementById("nodeURI").value);
           let cons = await connection.getNodeConnections(uri);
+
+          console.log("CONNECTIONS:");
+          console.log(cons);
         };
         document.getElementById("getAllConnectionsButton").onclick = async ()=>{
           let cons = await connection.getAllConnections();
+
+          console.log("CONNECTIONS:");
+          console.log(cons);
         };
 
         document.getElementById("getNeighboursButton").onclick = async ()=>{

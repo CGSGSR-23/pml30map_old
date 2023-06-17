@@ -90,7 +90,13 @@ export class Connection {
   }
 
   async getAllConnections() {
-    return this.send("getAllConnectionsReq");
+    let cA = await this.send("getAllConnectionsReq");
+
+    let outA = [];
+
+    for (let i = 0; i < cA.length; i++)
+      outA[i] = [new URI(cA[i].id1), new URI(cA[i].id2)];
+    return outA;
   }
 
   async getAllNodesData() {
@@ -106,7 +112,16 @@ export class Connection {
   }
 
   async getNodeConnections( uri ) {
-    return this.send("getNodeConnectionsReq", uri.id);
+    let cA = await this.send("getNodeConnectionsReq", uri.id);
+
+    let outA = [];
+    console.log("SDFJSDLFJSLDJF");
+    console.log(cA);
+
+
+    for (let i = 0; i < cA.length; i++)
+      outA[i] = [new URI(cA[i].id1), new URI(cA[i].id2)];
+    return outA;
   }
 
   async getNeighbours( uri ) {

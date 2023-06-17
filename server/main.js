@@ -63,7 +63,9 @@ class NodesDB { // Nodes data base
   }
 
   async getNodeConnections( uri ) {
-    let cs = (await (await this.connectionsC.find({ id1: uri })).toArray()).concat((await (await this.connectionsC.find({ id2: uri })).toArray()));
+    let uriStr = "[" + new Uint8Array(uri).toString() + "]";
+    
+    let cs = (await (await this.connectionsC.find({ id1: uriStr })).toArray()).concat((await (await this.connectionsC.find({ id2: uriStr })).toArray()));
     
     return cs;
   }
@@ -88,20 +90,25 @@ class NodesDB { // Nodes data base
   //////////////////// Connections
 
   async addConnection( uri1, uri2 ) {
-    var c1 = await this.connectionsC.findOne({ id1: uri1, id2: uri2 }),
-        c2 = await this.connectionsC.findOne({ id1: uri2, id2: uri1 });
+    let uri1Str = "[" + new Uint8Array(uri1).toString() + "]";
+    let uri2Str = "[" + new Uint8Array(uri2).toString() + "]";
+    var c1 = await this.connectionsC.findOne({ id1: uri1Str, id2: uri2Str }),
+        c2 = await this.connectionsC.findOne({ id1: uri2Str, id2: uri1Str });
 
     if (c1 != null || c1 != null)
       return false;
-    var insertedURI = (await this.connectionsC.insertOne({ id1: uri1, id2: uri2 })).insertedId;
+    var insertedURI = (await this.connectionsC.insertOne({ id1: uri1Str, id2: uri2Str })).insertedId;
     console.log("Inserted URI: ");
     console.log(insertedURI);
     return true;
   }
 
   async delConnection( uri1, uri2 ) {
-    this.connectionsC.deleteOne({ id1: uri1, id2: uri2 });
-    this.connectionsC.deleteOne({ id1: uri2, id2: uri1 });
+    let uri1Str = "[" + new Uint8Array(uri1).toString() + "]";
+    let uri2Str = "[" + new Uint8Array(uri2).toString() + "]";
+    
+    this.connectionsC.deleteOne({ id1: uri1Str, id2: uri2Str });
+    this.connectionsC.deleteOne({ id1: uri2Str, id2: uri1Str });
     return true;
   }
 
