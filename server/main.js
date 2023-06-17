@@ -258,7 +258,7 @@ async function main() {
     });
 
     socket.on("disconnectNodesReq", async ( uris, res )=>{
-      let result = await nodesDB.addConnection(uris[0], uris[1]);
+      let result = await nodesDB.delConnection(uris[0], uris[1]);
       LogMsg("disconnectNodesReq", uris, result);
       res(result);
     });

@@ -23,12 +23,15 @@ let connections = {};
 
 // creates new node on this location
 let nodePrim = await system.createPrimitive(rnd.Topology.sphere(), await system.createMaterial("./shaders/point_sphere"));
-async function createNode(location, oldName = null, oldSkyspherePath = null, addedOnServer = false, oldNodeID = null) {
+async function createNode(location, oldName = null, oldSkysphere = null, addedOnServer = false, oldNodeID = null) {
   let transform = mth.Mat4.translate(location);
 
   let position = location.copy();
   let unit = await system.addUnit(function() {
     return {
+      skysphere: {
+        rotation: 0,
+      },
       type: "node",
       response(system) {
         system.drawMarkerPrimitive(nodePrim, transform);
@@ -77,8 +80,12 @@ async function createNode(location, oldName = null, oldSkyspherePath = null, add
     } /* set */
   });
 
-  let skyspherePath = oldSkyspherePath;
-  Object.defineProperty(unit, "skyspherePath", {
+  let skyspherePath;
+  if (oldSkysphere !== null) {
+    skyspherePath = oldSkysphere.path;
+    unit.skysphere.rotation = oldSkysphere.rotation;
+  }
+  Object.defineProperty(unit.skysphere, "path", {
     get: function() {
       return skyspherePath;
     }, /* get */
@@ -87,7 +94,12 @@ async function createNode(location, oldName = null, oldSkyspherePath = null, add
       skyspherePath = newSkyspherePath;
 
       // update server data
-      server.updateNode(unit.nodeID, {skyspherePath: skyspherePath});
+      server.updateNode(unit.nodeID, {
+        skysphere: {
+          path: skyspherePath,
+          rotation: unit.skysphere.rotation,
+        }
+      });
     } /* set */
   });
   
@@ -98,7 +110,10 @@ async function createNode(location, oldName = null, oldSkyspherePath = null, add
     unit.nodeID = await server.addNode({
       name: unit.name,
       position: position,
-      skyspherePath: unit.skyspherePath
+      skysphere: {
+        path: unit.skysphere.path,
+        rotation: unit.skysphere.rotation
+      }
     });
   }
 
@@ -180,6 +195,7 @@ async function createConnection(firstNode, secondNode, addedOnServer = false) {
 
 function destroyConnection(connection) {
   connection.doSuicide = true;
+  console.log(connection.first.nodeID.toStr(), connection.second.nodeID.toStr());
   server.disconnectNodes(connection.first.nodeID, connection.second.nodeID);
   delete connections[connection.connectionID];
 } /* destroyConnection */
@@ -215,7 +231,7 @@ async function addServerData() {
   for (let nodeID of serverNodeIDs) {
     let serverNode = await server.getNode(nodeID);
 
-    await createNode(mth.Vec3.fromObject(serverNode.position), serverNode.name, serverNode.skyspherePath, true, nodeID);
+    await createNode(mth.Vec3.fromObject(serverNode.position), serverNode.name, serverNode.skysphere, true, nodeID);
   }
 
   // same shit, but with nice sth
@@ -395,7 +411,7 @@ system.canvas.addEventListener("mousedown", (event) => {
 
     nodeInputParameters.nodeID.innerText = unit.nodeID;
     nodeInputParameters.nodeName.value = unit.name;
-    nodeInputParameters.skyspherePath.value = unit.skyspherePath;
+    nodeInputParameters.skyspherePath.value = unit.skysphere.path;
 
     activeContentShowNode = unit;
     if (event.shiftKey) {
@@ -439,7 +455,7 @@ nodeInputParameters.nodeName.addEventListener("change", () => {
 
 nodeInputParameters.skyspherePath.addEventListener("change", () => {
   if (activeContentShowNode !== null) {
-    activeContentShowNode.skyspherePath = nodeInputParameters.skyspherePath.value;
+    activeContentShowNode.skysphere.path = nodeInputParameters.skyspherePath.value;
   }
 }); /* event nodeInputParameters.skyspherePath:"change" */
 

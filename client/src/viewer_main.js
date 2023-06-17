@@ -47,16 +47,19 @@ function clearArrows() {
 let currentNodeName = document.getElementById("currentNodeName");
 
 let currentNode = null;
+let currentNodeURI = null;
 let neighbours = [];
 async function setCurrentNode(nodeURI) {
   clearArrows();
 
   currentNode = await server.getNode(nodeURI);
+  currentNodeURI = nodeURI;
   console.log(currentNode);
   currentNode.position = mth.Vec3.fromObject(currentNode.position);
   currentNodeName.innerText = currentNode.name;
 
-  skysphere.texture.load(currentNode.skyspherePath);
+  skysphere.texture.load(currentNode.skysphere.path);
+  skysphere.rotation = currentNode.skysphere.rotation;
 
   let neighbourURIs = await server.getNeighbours(nodeURI);
 
@@ -95,6 +98,19 @@ system.canvas.addEventListener("click", (event) => {
 document.getElementById("toEditor").addEventListener("click", () => {
   window.location.href = "./index.html";
 }); /* event document.getElementById("toEditor"):"click" */
+
+let skysphereRotation = document.getElementById("skysphereRotation");
+skysphereRotation.addEventListener("input", (event) => {
+  let angle = skysphereRotation.value * (Math.PI * 2 / 100.0);
+
+  skysphere.rotation = angle;
+  server.updateNode(currentNodeURI, {
+    skysphere: {
+      rotation: currentNode.skysphere.rotation + angle,
+      path: currentNode.skysphere.path,
+    }
+  });
+}); /* event skysphereRotation:"input" */
 
 system.run();
 

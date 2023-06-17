@@ -8,6 +8,7 @@ export class Skysphere {
       type: "skysphere",
       name: "",
       texture: null,
+      rotation: 0,
 
       async init(system) {
         mtl = await system.createMaterial("./shaders/skysphere");
@@ -33,7 +34,8 @@ export class Skysphere {
         mtl.ubo.writeData(new Float32Array([
           dir.x, dir.y, dir.z, 0,
           rgh.x, rgh.y, rgh.z, 0,
-          tup.x, tup.y, tup.z, 0
+          tup.x, tup.y, tup.z,
+          sphere.rotation
         ]));
 
         system.drawMarkerPrimitive(prim);
