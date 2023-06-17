@@ -18,7 +18,7 @@ out float drawID;
 uniform bannerBuffer {
   vec4 cameraUp;
   vec4 cameraRight;
-  vec4 bannerLocation;
+  vec4 bannerLocationHeight;
 };
 
 const vec2 positions[4] = vec2[4](
@@ -37,9 +37,9 @@ const vec2 texCoords[4] = vec2[4](
 
 void main() {
   vec3 position =
-    bannerLocation.xyz +
+    bannerLocationHeight.xyz +
     cameraRight.xyz * positions[gl_VertexID].x +
-    cameraUp.xyz    * positions[gl_VertexID].y;
+    cameraUp.xyz    * (positions[gl_VertexID].y + bannerLocationHeight.w);
 
   gl_Position = (transformViewProj * transformWorld) * vec4(position, 1);
   drawPosition = (transformWorld * vec4(position, 1)).xyz;

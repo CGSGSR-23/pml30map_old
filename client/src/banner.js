@@ -3,7 +3,7 @@ import * as rnd from "./system/system.js";
 let bannerShader = null;
 
 export class Banner {
-  static async create(system, position, bannerContent) {
+  static async create(system, bannerContent, position, height = 0) {
     if (bannerShader === null) {
       bannerShader = await system.createShader("./shaders/banner");
     }
@@ -15,6 +15,7 @@ export class Banner {
         show: true,
         type: "banner",
         pos: position.copy(),
+        height: height,
 
         async init(system) {
           mtl = await system.createMaterial(bannerShader);
@@ -34,7 +35,7 @@ export class Banner {
             let data = new Float32Array([
               up.x,  up.y,  up.z,  1,
               rgh.x, rgh.y, rgh.z, 1,
-              pos.x, pos.y, pos.z, 1
+              pos.x, pos.y, pos.z, unit.height
             ]);
 
             mtl.ubo.writeData(data);

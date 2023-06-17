@@ -107,7 +107,7 @@ async function createNode(location, oldName = null, oldSkyspherePath = null, add
     name = `node#${unit.nodeID}`;
   }
 
-  unit.banner = await Banner.create(system, location.add(new mth.Vec3(0, 2, 0)), name);
+  unit.banner = await Banner.create(system, name, location, 2);
   unit.banner.show = false;
 
   nodes[unit.nodeID.toStr()] = unit;
@@ -239,7 +239,7 @@ const baseConstructionShower = await system.addUnit(async function() {
   let baseConstructionMaterial = await system.createMaterial("./shaders/default");
 
   let pointPlane = await system.createPrimitive(rnd.Topology.plane(2, 2), baseConstructionMaterial);
-  let transform = mth.Mat4.scale(new mth.Vec3(60, 1, 60)).mul(mth.Mat4.translate(new mth.Vec3(-30, 0, -30)));
+  let transform = mth.Mat4.scale(new mth.Vec3(400, 1, 400)).mul(mth.Mat4.translate(new mth.Vec3(-200, 0, -200)));
 
   return {
     name: "baseConstruction",
@@ -249,47 +249,29 @@ const baseConstructionShower = await system.addUnit(async function() {
   };
 }); /* baseConstructionShower */
 
-// add point setter unit
-const editorPositions = await system.addUnit(async function() {
-  let pointEvents = [];
+system.canvas.addEventListener("mousedown", (event) => {
+  if ((event.buttons & 1) !== 1 || !event.altKey) {
+    return;
+  }
 
-  system.canvas.addEventListener("mousedown", (event) => {
-    if ((event.buttons & 1) == 1 && event.altKey) {
-      pointEvents.push({
-        x: event.clientX,
-        y: event.clientY
-      });
-    }
-  });
+  let coord = system.getPositionByCoord(event.clientX, event.clientY);
+  let name = system.getUnitByCoord(event.clientX, event.clientY).name;
 
-  return {
-    response(system) {
-      // handle pointEvents
-      for (let i = 0; i < pointEvents.length; i++) {
-        let p = pointEvents[i];
-        let coord = system.getPositionByCoord(p.x, p.y);
-        let name = system.getUnitByCoord(p.x, p.y).name;
-        
-        if (name === "baseConstruction" && (coord.x !== coord.y || coord.y !== coord.z)) {
-          let add = true;
+  if (name === "baseConstruction" && (coord.x !== coord.y || coord.y !== coord.z)) {
+    let add = true;
 
-          for (let i = 0; i < nodes.length; i++) {
-            if (nodes[i].pos.distance(coord) <= 3) {
-              add = false;
-              break;
-            }
-          }
-          if (add) {
-            createNode(coord);
-          }
-
-        }
+    for (let i = 0; i < nodes.length; i++) {
+      if (nodes[i].pos.distance(coord) <= 3) {
+        add = false;
+        break;
       }
+    }
+    if (add) {
+      createNode(coord);
+    }
 
-      pointEvents = [];
-    } /* response */
-  };
-}); /* editorPositions */
+  }
+}); /* event system.canvas:"mousedown" */
 
 // edit connections between nodes
 const editorConnections = await system.addUnit(async function() {
@@ -322,7 +304,7 @@ const editorConnections = await system.addUnit(async function() {
             first: pointEvent,
             second: null
           };
-          eventPair.first.bannerPromise = Banner.create(system, unit.pos.add(new mth.Vec3(0, 4, 0)), "First element");
+          eventPair.first.bannerPromise = Banner.create(system, "First element", unit.pos, 4);
         } else {
           eventPair.second = pointEvent;
 
@@ -463,7 +445,7 @@ nodeInputParameters.skyspherePath.addEventListener("change", () => {
 
 nodeInputParameters.makeDefault.addEventListener("click", () => {
   if (activeContentShowNode !== null) {
-    server.setDefNodeURI(activeContentShowNode.nodeID).then(() => {console.log(`default node: ${activeContentShowNode.name}`)});
+    server.setDefNodeURI(activeContentShowNode.nodeID).then(() => {console.log(`new default node: ${activeContentShowNode.name}`)});
   }
 }); /* event nodeInputParameters.makeDefault:"click" */
 

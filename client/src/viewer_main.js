@@ -21,7 +21,7 @@ let arrows = [];
 async function createArrow(direction) {
   let transform = mth.Mat4.rotateY(Math.atan2(direction.z, direction.x));
 
-  let arrow = system.addUnit(() => {
+  let arrow = await system.addUnit(() => {
     return {
       type: "arrow",
       name: `arrow#${arrowUniqueID++}`,
@@ -49,18 +49,16 @@ let currentNodeName = document.getElementById("currentNodeName");
 let currentNode = null;
 let neighbours = [];
 async function setCurrentNode(nodeURI) {
-  console.log(nodeURI);
   clearArrows();
-  createArrow(new mth.Vec3(0, 0, 1));
 
-  currnetNode = await server.getNode(nodeURI);
+  currentNode = await server.getNode(nodeURI);
+  console.log(currentNode);
   currentNode.position = mth.Vec3.fromObject(currentNode.position);
   currentNodeName.innerText = currentNode.name;
 
   skysphere.texture.load(currentNode.skyspherePath);
 
   let neighbourURIs = await server.getNeighbours(nodeURI);
-  console.log(neighbourURIs);
 
   // delete old neighbours...
   for (let neighbour of neighbours) {
@@ -76,7 +74,7 @@ async function setCurrentNode(nodeURI) {
     neighbours.push(neighbour);
 
     // add arrow pointing to neighbour
-    let arrow = createArrow(neighbour.position.sub(currnetNode.position));
+    let arrow = await createArrow(neighbour.position.sub(currentNode.position).normalize());
     arrow.target = neighbour;
   }
 } /* setCurrentNode */
