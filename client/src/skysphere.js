@@ -1,18 +1,18 @@
 import * as rnd from "./system/system.js";
 
 export class Skysphere {
-  static async create() {
-    let mtl, tex, prim, _this;
+  static async create(system, filePath = null) {
+    let mtl, tex, prim, sphere;
 
-    return _this = {
-      name: "skysphere",
+    return sphere = {
+      type: "skysphere",
+      name: "",
       texture: null,
 
       async init(system) {
         mtl = await system.createMaterial("./shaders/skysphere");
 
-        tex = system.createTexture();
-        tex.load("./bin/imgs/lakhta.png");
+        tex = system.createTexture(filePath);
 
         mtl.textures.push(tex);
         mtl.ubo = system.createUniformBuffer();
@@ -20,8 +20,9 @@ export class Skysphere {
 
         prim = await system.createEmptyPrimitive(4, rnd.Topology.TRIANGLE_STRIP, mtl);
 
-        _this.texture = tex;
-      },
+        sphere.texture = tex;
+        sphere.name = `skysphere#${filePath}`;
+      }, /* init */
 
       response(system) {
         // 'perspective-correct' direction vectors
@@ -36,8 +37,8 @@ export class Skysphere {
         ]));
 
         system.drawMarkerPrimitive(prim);
-      }
-    };
+      } /* response */
+    }; /* _this */
   } /* create */
 } /* Skysphere */
 

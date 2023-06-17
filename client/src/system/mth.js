@@ -65,6 +65,10 @@ export class Vec3 {
       radius * Math.sin(elevation) * Math.sin(azimuth)
     );
   } /* sphericalToCartesian */
+
+  static fromObject(object) {
+    return new Vec3(object.x, object.y, object.z);
+  } /* fromObject */
 } /* Vec3 */
 
 export class Vec2 {

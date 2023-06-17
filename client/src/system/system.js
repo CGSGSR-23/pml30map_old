@@ -93,9 +93,20 @@ export class System {
     });
   } /* drawMarkerPrimitive */
 
-  createTexture() {
-    return new Texture(this.gl, Texture.UNSIGNED_BYTE, 4);
+  createTexture(path = null) {
+    if (path === null) {
+      return new Texture(this.gl, Texture.UNSIGNED_BYTE, 4);
+    } else {
+      let tex = new Texture(this.gl, Texture.UNSIGNED_BYTE, 4);
+      tex.load(path);
+
+      return tex;
+    }
   } /* createTexture */
+
+  getDefaultTexture() {
+    return Texture.defaultChecker(this.gl);
+  } /* getDefaultTexture */
 
   createCubemap() {
     return new Cubemap(this.gl);
@@ -185,8 +196,8 @@ export class System {
     return v;
   } /* unpackPromise */
 
-  async addUnit(createFunction) {
-    let val = await System.unpackPromise(createFunction(this));
+  async addUnit(createFunction, ...args) {
+    let val = await System.unpackPromise(createFunction(this, ...args));
 
     val.systemId = this.lastUnitID++;
     if (val.init != undefined) {
