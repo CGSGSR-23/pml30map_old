@@ -205,6 +205,8 @@ async function main() {
       res(value);
     });
 
+    // Nodes
+
     socket.on("getNodeReq", async ( uri, res )=>{
       let outData = await nodesDB.getNode(uri);
       LogMsg("getNodeReq", uri, outData);
@@ -215,6 +217,17 @@ async function main() {
       let newURI = await nodesDB.addNode(data);
       LogMsg("addNodeReq", data, newURI);
       res(newURI);
+    });
+
+    socket.on("updateNodeReq", async ( uri, data, res )=>{
+      let result = await nodesDB.updateNode(uri, data);
+    
+      if (result.modifiedCount === 1)
+        result = true;
+      else
+        result = false;
+      LogMsg("updateNodeReq", {uri, data}, result);
+      res(result)
     });
 
     socket.on("delNodeReq", async ( uri, res )=>{
@@ -228,28 +241,7 @@ async function main() {
       res(result);
     });
 
-    socket.on("updateNodeReq", async ( uri, data, res )=>{
-      let result = await nodesDB.updateNode(uri, data);
-    
-      if (result.modifiedCount === 1)
-        result = true;
-      else
-        result = false;
-      LogMsg("updateNodeReq", {uri, data}, result);
-      return result; 
-    });
-
-    socket.on("getAllNodesReq", async ( res )=>{
-      let outData = await nodesDB.getAllNodeURIs();
-      LogMsg("getAllNodesReq", "", outData);
-      res(outData);
-    });
-
-    socket.on("getAllNodesDataReq", async ( res )=>{
-      let outData = await nodesDB.getAllNodesData();
-      LogMsg("getAllNodesDataReq", "", outData);
-      res(outData);
-    });
+    // Connections
 
     socket.on("connectNodesReq", async ( uris, res )=>{
       let result = await nodesDB.addConnection(uris[0], uris[1]);
@@ -263,6 +255,40 @@ async function main() {
       res(result);
     });
 
+    // Graph info
+
+    socket.on("getNodeConnectionsReq", async ( uri, res )=>{
+      let cs = await nodesDB.getNodeConnections(uri);
+      LogMsg("getNodeConnectionsReq", uri, cs);
+      res(cs);
+    });
+
+    socket.on("getNeighboursReq", async ( uri, res )=>{
+      let nNodes = await nodesDB.getNeighbours(uri);
+      LogMsg("getNeighboursReq", uri, nNodes);
+      res(nNodes);
+    });
+
+    socket.on("getAllNodesReq", async ( res )=>{
+      let outData = await nodesDB.getAllNodeURIs();
+      LogMsg("getAllNodesReq", "", outData);
+      res(outData);
+    });
+
+    socket.on("getAllNodesDataReq", async ( res )=>{
+      let outData = await nodesDB.getAllNodesData();
+      LogMsg("getAllNodesDataReq", "", outData);
+      res(outData);
+    });
+    
+    socket.on("getAllConnectionsReq", async ( res )=>{
+      let cs = await nodesDB.getAllConnections();
+      LogMsg("getAllConnectionsReq", "", cs);
+      res(cs);
+    });
+
+    // Def node 
+
     socket.on("setDefNodeURIReq", async ( uri, res )=>{
       let result = await nodesDB.setDefNodeURI(uri);
       LogMsg("setDefNodeURIReq", uri, result);
@@ -273,24 +299,6 @@ async function main() {
       let outURI = await nodesDB.getDefNodeURI();
       LogMsg("getDefNodeURIReq", "", outURI);
       res(outURI);
-    });
-
-    socket.on("getNodeConnectionsReq", async ( uri, res )=>{
-      let cs = await nodesDB.getNodeConnections(uri);
-      LogMsg("getNodeConnectionsReq", uri, cs);
-      res(cs);
-    });
-
-    socket.on("getAllConnectionsReq", async ( res )=>{
-      let cs = await nodesDB.getAllConnections();
-      LogMsg("getAllConnectionsReq", "", cs);
-      res(cs);
-    });
-
-    socket.on("getNeighboursReq", async ( uri, res )=>{
-      let nNodes = await nodesDB.getNeighbours(uri);
-      LogMsg("getNeighboursReq", uri, nNodes);
-      res(nNodes);
     });
 
     socket.on("disconnect", () => {

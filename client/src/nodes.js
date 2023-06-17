@@ -1,5 +1,41 @@
 import { io } from "socket.io-client";
 
+export class URI {
+  id; // id in Uint8Array!!!
+
+  toStr() {
+    if (this.id != undefined)
+      return "[" + this.id.toString() + "]";
+  }
+
+  fromStr( str ) {
+    this.id = new Uint8Array(JSON.parse(str));
+  }
+
+  static fromArray( inA ) {
+    let outA = [];
+    for (let i = 0; i < inA.length; i++)
+      outA[i] = new URI(inA[i]);
+    return outA;
+  }
+
+  constructor( data ) {
+    // console.log("URI in:");
+    // console.log(data);
+    if (typeof(data) == 'string')
+      this.fromStr(data);
+    else if (data instanceof ArrayBuffer)
+      this.id = new Uint8Array(data);
+    else if (data instanceof Uint8Array)
+      this.id = data;
+    else
+    {
+      console.log("WRONG URI TYPEL:");
+      console.log(data);
+    }
+  }
+}
+
 export class Connection {
   socket;
 
@@ -20,74 +56,10 @@ export class Connection {
     this.socket.on("connect", () => {
       console.log("SOCKET ID: " + this.socket.id);
 
-      this.socket.on("getNodeRes", (msg)=>{
-        console.log(msg);
-        if (this.getNodeRes != undefined)
-          this.getNodeRes(msg);
-      });
-      
-      this.socket.on("addNodeRes", (msg)=>{
-        console.log(msg);
-        if (this.addNodeRes != undefined)
-          this.addNodeRes(msg);
-      });
-
-      this.socket.on("delNodeRes", (msg)=>{
-        console.log(msg);
-        if (this.delNodeRes != undefined)
-          this.delNodeRes(msg);
-      });
-
-      this.socket.on("connectNodesRes", (msg)=>{
-        console.log(msg);
-        if (this.connectNodesRes != undefined)
-          this.connectNodesRes(msg);
-      });
-
-      this.socket.on("disconnectNodesRes", (msg)=>{
-        console.log(msg);
-        if (this.disconnectNodesRes != undefined)
-          this.disconnectNodesRes(msg);
-      });
-      
-      this.socket.on("setDefNodeURIRes", (msg)=>{
-        console.log(msg);
-        if (this.setDefNodeURIRes != undefined)
-          this.setDefNodeURIRes(msg);
-      });
-
-      this.socket.on("getDefNodeURIRes", (msg)=>{
-        console.log(msg);
-        if (this.getDefNodeURIRes != undefined)
-          this.getDefNodeURIRes(msg);
-      });
-
-      this.socket.on("getNodeConnectionsReq", (msg)=>{
-        console.log(msg);
-        if (this.getNodeConnectionsReq != undefined)
-          this.getNodeConnectionsReq(msg);
-      });
-      
-      this.socket.on("getAllNodesRes", (msg)=>{
-        console.log(msg);
-        if (this.getAllNodesRes != undefined)
-          this.getAllNodesRes(msg);
-      });
-
     });
-  } /* constructor */
-
+  }
 
   async send( req, ...args ) {
-    //let out;
-
-    //await this.socket.emit(req, ( result )=>{
-    //  out = result;
-    //  console.log(result);
-    //});
-
-    //return out;
-
     return new Promise((resolve) => {
       this.socket.emit(req, ...args, (response) => {
         console.log("TEST OUT:");
@@ -95,26 +67,26 @@ export class Connection {
         resolve(response);
       });
     });
-  } /* send */
+  }
 
   async ping( value ) {
     return this.send("ping", value);
   }
 
   async getNode( uri ) {
-    return this.send("getNodeReq", uri);
+    return this.send("getNodeReq", uri.id);
   }
 
   async addNode( data ) {
-    return this.send("addNodeReq", data);
+    return new URI(await this.send("addNodeReq", data));
   }
 
   async updateNode( uri, data ) {
-    return this.send("updateNodeReq", uri, data);
+    return this.send("updateNodeReq", uri.id, data);
   }
 
   async getAllNodes() {
-    return this.send("getAllNodesReq");
+    return URI.fromArray( await this.send("getAllNodesReq"));
   }
 
   async getAllConnections() {
@@ -130,26 +102,26 @@ export class Connection {
   }
 
   async connectNodes( uri1, uri2 ) {
-    return this.send("connectNodesReq", [uri1, uri2]);
+    return this.send("connectNodesReq", [uri1.id, uri2.id]);
   }
 
   async getNodeConnections( uri ) {
-    return this.send("getNodeConnectionsReq", uri);
+    return this.send("getNodeConnectionsReq", uri.id);
   }
 
   async getNeighbours( uri ) {
-    return this.send("getNeighboursReq", uri);
+    return URI.fromArray(await this.send("getNeighboursReq", uri));
   }
 
   async disconnectNodes( uri1, uri2 ) {
-    return this.send("disconnectNodesReq", [uri1, uri2]);
+    return this.send("disconnectNodesReq", [uri1.id, uri2.id]);
   }
 
   async setDefNodeURI( uri ) {
-    return this.send("setDefNodeURIReq", uri);
+    return this.send("setDefNodeURIReq", uri.id);
   }
 
   async getDefNodeURI() {
-    return this.send("getDefNodeURIReq");
+    return new URI(await this.send("getDefNodeURIReq"));
   }
 } /* Connection */

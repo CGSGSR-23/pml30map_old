@@ -78,7 +78,7 @@
       </label><br/>
       <p id="outputField"></p>
       <script type="module">
-        import { Connection } from "./bundle.js";
+        import { Connection, URI } from "./bundle.js";
   
         const connection = new Connection();  
   
@@ -121,17 +121,18 @@
             img: imgF.name,
             pos: posV
           };
-          document.getElementById("outputField").innerText = new Uint8Array(await connection.addNode(data)).toString();
+
+          document.getElementById("outputField").innerText = (await connection.addNode(data)).toStr();
         };
         
         document.getElementById("getNodeButton").onclick = async()=>{
-          let uriStr = document.getElementById("nodeURI").value;
-          document.getElementById("outputField").innerText = JSON.stringify(await connection.getNode(new Uint8Array(JSON.parse(uriStr))));
+          let uri = new URI(document.getElementById("nodeURI").value);
+          document.getElementById("outputField").innerText = JSON.stringify(await connection.getNode(uri));
         };
 
         document.getElementById("delNodeButton").onclick = async ()=>{
-          let uriStr = document.getElementById("nodeURI").value;
-          await connection.delNode(new Uint8Array(JSON.parse(uriStr)));
+          let uri = new URI(document.getElementById("nodeURI").value);
+          await connection.delNode(uri);
         };
 
         document.getElementById("updateNodeButton").onclick = async ()=>{
@@ -147,8 +148,8 @@
             pos: posV
           };
 
-          let uriStr = document.getElementById("nodeURI").value;
-          let result = await connection.updateNode(new Uint8Array(JSON.parse(uriStr)), data);
+          let uri = new URI(document.getElementById("nodeURI").value);
+          let result = await connection.updateNode(uri, data);
           console.log();
         };
 
@@ -159,7 +160,7 @@
           let str = "[";
 
           for (let i = 0; i < nodes.length; i++)
-            str += "[" + new Uint8Array(nodes[i]).toString() + "],";
+            str += nodes[i].toStr() + ",";
           document.getElementById("outputField").innerText = str + "]";
         };
 
@@ -183,7 +184,7 @@
         };
         
         document.getElementById("getNodeConnectionsButton").onclick = async ()=>{
-          let uri = document.getElementById("nodeURI").value;
+          let uri = new URI(document.getElementById("nodeURI").value);
           let cons = await connection.getNodeConnections(uri);
         };
         document.getElementById("getAllConnectionsButton").onclick = async ()=>{
@@ -191,26 +192,27 @@
         };
 
         document.getElementById("getNeighboursButton").onclick = async ()=>{
-          let uri = document.getElementById("nodeURI").value;
+          let uri = new URI(document.getElementById("nodeURI").value);
           let ns = await connection.getNeighbours(uri);
-          //let outStr = "";
+          let outStr = "]";
 
-          //for (let i = 0; i < ns.length; i++)
-          //  outStr = outStr + ns[i]
+          for (let i = 0; i < ns.length; i++)
+            outStr += ns[i] + ",";
+
+          document.getElementById("outputField").innerText = outStr + "]";
         };
   
   
         document.getElementById("setDefNodeButton").onclick = async ()=>{
-          let uriStr = document.getElementById("nodeURI").value;
-          await connection.setDefNodeURI(new Uint8Array(JSON.parse(uriStr)));
+          let uri = new URI(document.getElementById("nodeURI").value);
+          await connection.setDefNodeURI(uri);
         };
 
         document.getElementById("getDefNodeButton").onclick = async ()=>{
           let uri = await connection.getDefNodeURI();
 
           console.log(uri);
-          let uriStr = "[" + new Uint8Array(uri).toString() + "]";
-          document.getElementById("outputField").innerText = uriStr;
+          document.getElementById("outputField").innerText = uri.toStr();
         };
         
         document.getElementById("pingButton").onclick = async ()=>{
