@@ -88,9 +88,6 @@ export class Connection {
 
     //return out;
 
-    console.log("TEST ARGS:");
-    console.log(args);
-
     return new Promise((resolve) => {
       this.socket.emit(req, ...args, (response) => {
         console.log("TEST OUT:");
@@ -101,42 +98,58 @@ export class Connection {
   } /* send */
 
   async ping( value ) {
-    return this.send("ping", value );
-  } /* ping */
+    return this.send("ping", value);
+  }
 
   async getNode( uri ) {
     return this.send("getNodeReq", uri);
-  } /* getNode */
+  }
 
   async addNode( data ) {
     return this.send("addNodeReq", data);
-  } /* addNode */
+  }
+
+  async updateNode( uri, data ) {
+    return this.send("updateNodeReq", uri, data);
+  }
 
   async getAllNodes() {
     return this.send("getAllNodesReq");
-  } /* getAllNodes */
+  }
+
+  async getAllConnections() {
+    return this.send("getAllConnectionsReq");
+  }
+
+  async getAllNodesData() {
+    return this.send("getAllNodesDataReq");
+  }
 
   async delNode( node ) {
     return this.send("delNodeReq", node);
-  } /* delNode */
+  }
 
   async connectNodes( uri1, uri2 ) {
     return this.send("connectNodesReq", [uri1, uri2]);
-  } /* connectNodes */
+  }
 
   async getNodeConnections( uri ) {
     return this.send("getNodeConnectionsReq", uri);
-  } /* getNodeConnections */
+  }
+
+  async getNeighbours( uri ) {
+    return this.send("getNeighboursReq", uri);
+  }
 
   async disconnectNodes( uri1, uri2 ) {
     return this.send("disconnectNodesReq", [uri1, uri2]);
-  } /* disconnectNodes */
+  }
 
   async setDefNodeURI( uri ) {
     return this.send("setDefNodeURIReq", uri);
-  } /* setDefNodeURI */
+  }
 
   async getDefNodeURI() {
     return this.send("getDefNodeURIReq");
-  } /* getDefNodeURI */
+  }
 } /* Connection */
