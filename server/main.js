@@ -77,8 +77,10 @@ class NodesDB { // Nodes data base
   }
 
   async getNeighbours( uri ) {
-    let right = await (await this.connectionsC.find({ id1: uri })).toArray();
-    let left = await (await this.connectionsC.find({ id2: uri })).toArray();
+    let uriStr = "[" + new Uint8Array(uri).toString() + "]";
+    
+    let right = await (await this.connectionsC.find({ id1: uriStr })).toArray();
+    let left = await (await this.connectionsC.find({ id2: uriStr })).toArray();
 
     let outN = [];
     for (let i = 0; i < right.length; i++)

@@ -115,17 +115,14 @@ export class Connection {
     let cA = await this.send("getNodeConnectionsReq", uri.id);
 
     let outA = [];
-    console.log("SDFJSDLFJSLDJF");
-    console.log(cA);
-
-
+    
     for (let i = 0; i < cA.length; i++)
       outA[i] = [new URI(cA[i].id1), new URI(cA[i].id2)];
     return outA;
   }
 
   async getNeighbours( uri ) {
-    return URI.fromArray(await this.send("getNeighboursReq", uri));
+    return URI.fromArray(await this.send("getNeighboursReq", uri.id));
   }
 
   async disconnectNodes( uri1, uri2 ) {
