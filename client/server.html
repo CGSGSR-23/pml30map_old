@@ -5,7 +5,7 @@
     <title>PML30 interactive map</title>
   </head>
   <body style="display: flex; flex-direction: row;">
-    <div class="props" style="flex: 1;">
+    <div class="props" style="flex: 1; overflow-y: auto;">
       <div style="border: 2px dashed red; padding: 10px; margin: 5px;">
         <h1>Add node</h1>
         <label> Image value:
@@ -32,51 +32,34 @@
         <label> Second node URI:
           <input id="secondNodeURI" type="text">
         </label><br/>
-        <label>
-          <input id="connectNodesButton" type="button" value="connect">
-        </label><br/>
-        <label>
-          <input id="disconnectNodesButton" type="button" value="disconnect">
-        </label><br/>
+        <input id="connectNodesButton" type="button" value="connect"><br/>
+        <input id="disconnectNodesButton" type="button" value="disconnect"><br/>
       </div>
       <div style="border: 2px dashed red; padding: 10px; margin: 5px;">
         <h1>Def nodes</h1>
         <label> Node URI:
           <input id="nodeURI" type="text">
         </label><br/>
-        <label>
-          <input id="setDefNodeButton" type="button" value="set def">
+        <input id="setDefNodeButton" type="button" value="set def"><br/>
+        <input id="getDefNodeButton" type="button" value="get def"><br/>
+        <input id="getNodeButton" type="button" value="get node"><br/>
+        <input id="updateNodeButton" type="button" value="update node"><br/>
+        <input id="delNodeButton" type="button" value="del node"><br/>
+        <input id="getNodeConnectionsButton" type="button" value="get node con"><br/>
+        <input id="getAllConnectionsButton" type="button" value="get all con"><br/>
+        <input id="getAllNodesButton" type="button" value="get all nodes"><br/>
+        <input id="getAllNodesDataButton" type="button" value="get all nodes data"><br/>
+        <input id="getNeighboursButton" type="button" value="get neighbours"><br/>
+        <input id="pingButton" type="button" value="ping"><br/>
+      </div>
+      <div style="border: 2px dashed red; padding: 10px; margin: 5px;">
+        <h1>DB global</h1>
+        <input id="clearDBButton" type="button" value="clear DB"><br/>
+        <input id="getDBButton" type="button" value="get DB"><br/>
+        <label> new DB source:
+          <input id="dbSource" type="file">
         </label><br/>
-        <label>
-          <input id="getDefNodeButton" type="button" value="get def">
-        </label><br/>
-        <label>
-          <input id="getNodeButton" type="button" value="get node">
-        </label><br/>
-        <label>
-          <input id="updateNodeButton" type="button" value="update node">
-        </label><br/>
-        <label>
-          <input id="delNodeButton" type="button" value="del node">
-        </label><br/>
-        <label>
-          <input id="getNodeConnectionsButton" type="button" value="get node con">
-        </label><br/>
-        <label>
-          <input id="getAllConnectionsButton" type="button" value="get all con">
-        </label><br/>
-        <label>
-          <input id="getAllNodesButton" type="button" value="get all nodes">
-        </label><br/>
-        <label>
-          <input id="getAllNodesDataButton" type="button" value="get all nodes data">
-        </label><br/>
-        <label>
-          <input id="getNeighboursButton" type="button" value="get neighbours">
-        </label><br/>
-        <label>
-          <input id="pingButton" type="button" value="ping">
-        </label><br/>
+        <input id="loadDBButton" type="button" value="load DB"><br/>
       </div>
     </div>
     <div id="output" style="flex: 2; background-color: black; color:azure"></div>
@@ -229,6 +212,21 @@
       document.getElementById("pingButton").onclick = async ()=>{
         output.innerText = await connection.ping(47);
       };
+
+      document.getElementById("clearDBButton").onclick = async ()=>{
+        output.innerText = await connection.clearDB();
+      };
+
+      document.getElementById("getDBButton").onclick = async ()=>{
+        output.innerHTML = JSON.stringify(await connection.getDB());
+      };
+
+      document.getElementById("loadDBButton").onclick = async ()=>{
+        let newDB = JSON.parse(document.getElementById('dbSource').value);
+        
+        output.innerHTML = await connection.loadDB(newDB);
+      };
+
     </script>
   </body>
 </html>

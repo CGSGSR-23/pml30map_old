@@ -136,4 +136,17 @@ export class Connection {
   async getDefNodeURI() {
     return new URI(await this.send("getDefNodeURIReq"));
   }
+
+  async clearDB() {
+    return this.send("clearDBReq");
+  }
+
+  async getDB() {
+    return this.send("getDBReq");
+  }
+
+  async loadDB( db ) {
+    return this.send("loadDBReq", db);
+  }
+
 } /* Connection */
