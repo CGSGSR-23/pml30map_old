@@ -353,6 +353,7 @@ let nodeInputParameters = {
 
 let connectionParameters = document.getElementById("connectionParameters");
 let connectionInputParameters = {
+  nodesURI: document.getElementById("connectionNodesURI"),
   deleteConnection: document.getElementById("deleteConnection")
 };
 
@@ -387,7 +388,7 @@ system.canvas.addEventListener("mousemove", (event) => {
 
 // unit content show selector
 system.canvas.addEventListener("mousedown", (event) => {
-  if ((event.buttons & 1) !== 1) {
+  if ((event.buttons & 1) !== 1 || event.ctrlKey) {
     return;
   }
 
@@ -418,6 +419,8 @@ system.canvas.addEventListener("mousedown", (event) => {
       doMoveNode = true;
     }
   } else if (unit.type === "connection") {
+    connectionInputParameters.nodesURI.innerText = `${unit.first.nodeID.toStr()} - ${unit.second.nodeID.toStr()}`;
+
     nodeParameters.setAttribute("hidden", "");
     connectionParameters.removeAttribute("hidden");
 

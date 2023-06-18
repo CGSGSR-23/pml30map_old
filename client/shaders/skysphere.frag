@@ -5,13 +5,20 @@ precision highp float;
 layout(location = 0) out vec4 outColorID;
 
 uniform projectionInfo {
-  vec4 camDir;
-  vec4 camRight;
+  vec3 camDir;
+  float doTransit;
+
+  vec3 camRight;
+  float transitionCoefficent;
+
   vec3 camUp;
   float sphereRotation;
+
+  float transitSphereRotation;
 };
 
 uniform sampler2D Texture0;
+uniform sampler2D Texture1;
 
 in vec2 drawTexCoord;
 in float drawID;
@@ -20,11 +27,27 @@ in float drawID;
 
 void main() {
   vec3 dir = camDir.xyz + camRight.xyz * drawTexCoord.x + camUp.xyz * drawTexCoord.y;
+  vec2 basicTexCoord = vec2(
+    sign(dir.z) * acos(dir.x / length(dir.xz)) / PI / 2.0 + 2.0,
+    acos(dir.y / length(dir)) / PI
+  );
+  vec2 texCoord = vec2(
+    fract((sign(dir.z) * acos(dir.x / length(dir.xz)) + sphereRotation) / PI / 2.0),
+    basicTexCoord.y
+  );
 
-  float azimuth = sign(dir.z) * acos(dir.x / length(dir.xz)) + sphereRotation;
-  float elevator = acos(dir.y / length(dir));
-
-  outColorID = vec4(texture(Texture0, vec2((azimuth / PI + 1.0) / 2.0, elevator / PI)).xyz, drawID);
+  if (doTransit == 1.0) {
+    vec2 secondTexCoord = vec2(
+      fract(basicTexCoord.x + transitSphereRotation / PI / 2.0),
+      basicTexCoord.y
+    );
+    outColorID = vec4(
+      mix(texture(Texture0, texCoord).xyz, texture(Texture1, secondTexCoord).xyz, transitionCoefficent),
+      drawID
+    );
+  } else {
+    outColorID = vec4(texture(Texture0, texCoord).xyz, drawID);
+  }
 } /* main */
 
 /* default_pbr.frag */

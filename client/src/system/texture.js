@@ -59,8 +59,8 @@ export class Texture {
 
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
   } /* constructor */
@@ -92,12 +92,15 @@ export class Texture {
   }
 
   load(path) {
-    let gl = this.gl;
+    return new Promise((resolve, reject) => {
+      let image = new Image();
 
-    // async image loading
-    let image = new Image();
-    image.src = path;
-    image.addEventListener("load", () => { this.fromImage(image); });
+      image.src = path;
+      image.onload = () => { 
+        this.fromImage(image);
+        resolve();
+      };
+    });
   } /* load */
 
   fromImage(image) {

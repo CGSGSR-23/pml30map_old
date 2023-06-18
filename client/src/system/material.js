@@ -25,4 +25,13 @@ export class Material {
     for (let i = 0; i < this.textures.length; i++)
       this.textures[i].bind(this.shader, i);
   } /* apply */
+
+  unboundTextures() {
+    let gl = this.gl;
+
+    for (let i = 0; i < this.textures.length; i++) {
+      gl.activeTexture(gl.TEXTURE0 + i);
+      gl.bindTexture(gl.TEXTURE_2D, null);
+    }
+  } /* unboundTextures */
 } /* Material */

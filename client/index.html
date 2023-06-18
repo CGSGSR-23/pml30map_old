@@ -1,6 +1,19 @@
 <!DOCTYPE html>
 
-<html style="font-family: 'consolas';">
+<html>
+  <style>
+    #canvas, #ui { 
+      position: fixed;
+    };
+
+    #canvas {
+      z-index: 1;
+    };
+
+    #ui {
+      z-index: 3;
+    };
+  </style>
   <head>
     <title>PML30 interactive map editor</title>
   </head>
@@ -9,10 +22,10 @@
     <canvas id="canvas" oncontextmenu="return false"></canvas>
     <script type="module" src="./editor_bundle.js"></script>
 
-    <div id="parameters">
-      <table id="nodeParameters">
+    <div id="ui">
+      <table id="nodeParameters" hidden>
         <th>Node parameters</th>
-        <tr> <td>Node ID:       </td> <td><t id="nodeID"></t>                   </td> </tr>
+        <tr> <td>Node URI:      </td> <td><t id="nodeID"></t>                   </td> </tr>
         <tr> <td>Node name:     </td> <td><input type="text" id="nodeName">     </td> </tr>
         <tr> <td>Skysphere path:</td> <td><input type="text" id="skyspherePath"></td> </tr>
         <tr> <td><input type="button" id="makeDefault" value="Make default"></td></tr>
@@ -20,6 +33,7 @@
       </table>
       <table id="connectionParameters" hidden>
         <th>Connection parameters</th>
+        <tr> <td>Nodes URI:</td> <td><t id="connectionNodesURI"></t></td> </tr>
         <tr> <td><input type="button" id="deleteConnection" value="Delete connection"></td></tr>
       </table>
       <input type="button" id="toPreview" value="To Preview">

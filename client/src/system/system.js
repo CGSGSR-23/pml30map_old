@@ -27,8 +27,8 @@ export class System {
     let canvas = document.getElementById("canvas");
     this.canvas = canvas;
 
-    canvas.width = 800;
-    canvas.height = 600;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
     let gl = canvas.getContext("webgl2");
     if (gl == null) {
       throw Error("Can't initialize WebGL2");
@@ -43,6 +43,9 @@ export class System {
 
     gl.enable(WebGL2RenderingContext.DEPTH_TEST);
     gl.depthFunc(WebGL2RenderingContext.LEQUAL);
+    gl.enable(WebGL2RenderingContext.CULL_FACE);
+
+    gl.cullFace(WebGL2RenderingContext.BACK);
 
     this.renderQueue = [];
     this.markerRenderQueue = [];
@@ -61,14 +64,14 @@ export class System {
 
     // resize handling
     window.onresize = () => {
-      // let resolution = new mth.Size(window.innerWidth, window.innerHeight);
+      let resolution = new mth.Size(window.innerWidth, window.innerHeight);
 
-      // canvas.width = resolution.w;
-      // canvas.height = resolution.h;
+      canvas.width = resolution.w;
+      canvas.height = resolution.h;
 
-      // this.camera.resize(resolution);
-      // this.target.resize(resolution);
-      // Target.default(gl).resize(resolution);
+      this.camera.resize(resolution);
+      this.target.resize(resolution);
+      Target.default(gl).resize(resolution);
     };
 
     this.units = {};
@@ -189,6 +192,7 @@ export class System {
     // rendering to screen framebuffer
     Target.default(gl).bind();
     EmptyPrimitive.drawFromParams(this.gl, 4, Topology.TRIANGLE_STRIP, this.fsMaterial, this.cameraUBO);
+    this.fsMaterial.unboundTextures();
   } /* end */
 
   // genious function, but it works!

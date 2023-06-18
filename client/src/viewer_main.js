@@ -1,7 +1,7 @@
 import * as rnd from "./system/system.js";
 import * as mth from "./system/mth.js";
 
-import { Connection, URI } from "./nodes.js";
+import { Connection } from "./nodes.js";
 
 import { Rotator } from "./camera_controller.js";
 import { Skysphere } from "./skysphere.js";
@@ -13,8 +13,7 @@ let server = new Connection();
 let skysphere = await system.addUnit(Skysphere.create, "./bin/imgs/lakhta.png");
 let cameraController = system.addUnit(Rotator.create);
 
-let arrowMaterial = await system.createMaterial("./shaders/arrow");
-let arrowPrim = await system.createPrimitive(rnd.Topology.square(), arrowMaterial);
+let arrowPrim = await system.createEmptyPrimitive(4, rnd.Topology.TRIANGLE_FAN, await system.createMaterial("./shaders/arrow"));
 let arrowUniqueID = 0;
 let arrows = [];
 
@@ -53,17 +52,19 @@ let currentNode = null;
 let currentNodeURI = null;
 let neighbours = [];
 async function setCurrentNode(nodeURI) {
-  clearArrows();
 
   currentNode = await server.getNode(nodeURI);
   currentNodeURI = nodeURI;
-  console.log(currentNode);
-  skysphereRotation.value = currentNode.skysphere.rotation / (Math.PI * 2) * 314;
+
   currentNode.position = mth.Vec3.fromObject(currentNode.position);
   currentNodeName.innerText = currentNode.name;
 
-  skysphere.texture.load(skysphereFolderPath + currentNode.skysphere.path);
-  skysphere.rotation = currentNode.skysphere.rotation;
+  clearArrows();
+
+  // wait then new node enviroment is loaded
+  skysphereRotation.value = currentNode.skysphere.rotation / (Math.PI * 2) * 314;
+  await skysphere.slide(skysphereFolderPath + currentNode.skysphere.path, currentNode.skysphere.rotation);
+  // await skysphere.texture.load(skysphereFolderPath + currentNode.skysphere.path);
 
   let neighbourURIs = await server.getNeighbours(nodeURI);
 

@@ -54,7 +54,7 @@ export class Arcball {
 
     const onWheel = function(event) {
       let delta = event.deltaY / 5000.0;
-      
+
       loc = loc.add(at.sub(loc).mul(delta));
     };
     
@@ -77,8 +77,10 @@ export class Rotator {
     let camera = {
       loc: new mth.Vec3(30, 30, 30),
       at: new mth.Vec3(0, 0, 0),
+      projSize: 1,
       response(system) {
         system.camera.set(camera.loc, camera.at, up);
+        system.camera.projSet(1, 100, new mth.Size(camera.projSize, camera.projSize));
       } /* response */
     };
 
@@ -93,8 +95,8 @@ export class Rotator {
           elevator = Math.acos(direction.y / direction.length());
 
         // rotate direction
-        azimuth  += event.movementX / 200.0;
-        elevator -= event.movementY / 200.0;
+        azimuth  -= event.movementX / 200.0;
+        elevator += event.movementY / 200.0;
         
         elevator = Math.min(Math.max(elevator, 0.01), Math.PI);
         
@@ -105,24 +107,18 @@ export class Rotator {
 
         camera.loc = camera.at.add(direction);
       }
-      
-      /*
-      if ((event.buttons & 2) == 2) { // move
-        let dir = at.sub(loc).normalize();
-        let rgh = dir.cross(up).normalize();
-        let tup = rgh.cross(dir);
-        
-        let delta = rgh.mul(-event.movementX * radius / 300.0).add(tup.mul(event.movementY * radius / 300.0));
-        loc = loc.add(delta);
-        at = at.add(delta);
-      }
-      */
     }; /* onMouseMove */
 
+    const clamp = (number, minBorder, maxBorder) => {
+      return Math.min(Math.max(number, minBorder), maxBorder);
+    };
+
     const onWheel = function(event) {
-      let delta = event.deltaY / 2000.0;
-      
-      camera.loc = camera.loc.add(camera.at.sub(camera.loc).mul(delta));
+      let delta = event.deltaY / 700.0;
+
+
+      camera.projSize -= camera.projSize * delta;
+      camera.projSize = clamp(camera.projSize, 0.1, 1);
     }; /* onWheel */
     
     let canvas = document.getElementById("canvas");

@@ -316,6 +316,7 @@ export class Mat4 {
 export class Camera {
   // camera projection shape params
   projSize = new Size(0.01, 0.01);
+  correctedProjSize = new Size(0.01, 0.01);
   near = 0.01;
   far = 8192;
   
@@ -340,24 +341,29 @@ export class Camera {
     this.resize(new Size(30, 30));
   } /* constructor */
 
-  projSet(newNear, newFar, newProjSize = new Size(0.01, 0.01)) {
+  projSet(newNear, newFar, newProjSize) {
     this.projSize = newProjSize.copy();
     this.near = newNear;
     this.far = newFar;
+    this.correctedProjSize = this.projSize.copy();
 
     if (this.screenSize.w > this.screenSize.h) {
-      this.projSize.w *= this.screenSize.w / this.screenSize.h;
+      this.correctedProjSize.w *= this.screenSize.w / this.screenSize.h;
     } else {
-      this.projSize.h *= this.screenSize.h / this.screenSize.w;
+      this.correctedProjSize.h *= this.screenSize.h / this.screenSize.w;
     }
 
-    this.proj = Mat4.frustum(-this.projSize.w / 2, this.projSize.w / 2, -this.projSize.h / 2, this.projSize.h / 2, this.near, this.far);
+    this.proj = Mat4.frustum(
+      -this.correctedProjSize.w / 2, this.correctedProjSize.w / 2,
+      -this.correctedProjSize.h / 2, this.correctedProjSize.h / 2,
+      this.near, this.far
+    );
     this.viewProj = this.view.mul(this.proj);
   } /* projSet */
 
   resize(newScreenSize) {
     this.screenSize = newScreenSize.copy();
-    this.projSet(this.near, this.far);
+    this.projSet(this.near, this.far, this.projSize);
   } /* resize */
 
   set(loc, at, up) {
