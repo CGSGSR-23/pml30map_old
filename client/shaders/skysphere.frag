@@ -32,7 +32,7 @@ void main() {
     acos(dir.y / length(dir)) / PI
   );
   vec2 texCoord = vec2(
-    fract((sign(dir.z) * acos(dir.x / length(dir.xz)) + sphereRotation) / PI / 2.0),
+    fract(basicTexCoord.x + sphereRotation / PI / 2.0),
     basicTexCoord.y
   );
 

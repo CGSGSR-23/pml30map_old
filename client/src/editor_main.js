@@ -21,9 +21,20 @@ system.addUnit(Skysphere.create, "./bin/imgs/lakhta.png");
 let nodes = {};
 let connections = {};
 
-// creates new node on this location
-let nodePrim = await system.createPrimitive(rnd.Topology.sphere(), await system.createMaterial("./shaders/point_sphere"));
-async function createNode(location, oldName = null, oldSkysphere = null, addedOnServer = false, oldNodeID = null) {
+
+let nodePrim = await system.createPrimitive(rnd.Topology.sphere(), await system.createMaterial("./shaders/point_sphere")); // primitive of any node displayed
+
+// creates new node
+async function createNode(location, oldName = null, oldSkysphere = null, addedOnServer = false, oldnodeURI = null) {
+  // check if new node is possible to be placed
+  if (!addedOnServer) {
+    for (let oldNode of Object.values(nodes)) {
+      if (location.distance(oldNode.pos) <= 3) {
+        return null;
+      }
+    }
+  }
+
   let transform = mth.Mat4.translate(location);
 
   let position = location.copy();
@@ -32,6 +43,7 @@ async function createNode(location, oldName = null, oldSkysphere = null, addedOn
       skysphere: {
         rotation: 0,
       },
+
       type: "node",
       response(system) {
         system.drawMarkerPrimitive(nodePrim, transform);
@@ -60,7 +72,7 @@ async function createNode(location, oldName = null, oldSkysphere = null, addedOn
       updateConnectionTransforms(unit);
 
       // update server data
-      server.updateNode(unit.nodeID, {position: position});
+      server.updateNode(unit.nodeURI, {position: position});
     } /* set */
   });
 
@@ -76,7 +88,7 @@ async function createNode(location, oldName = null, oldSkysphere = null, addedOn
       name = newName;
       // update server data
 
-      server.updateNode(unit.nodeID, {name: name});
+      server.updateNode(unit.nodeURI, {name: name});
     } /* set */
   });
 
@@ -85,6 +97,8 @@ async function createNode(location, oldName = null, oldSkysphere = null, addedOn
     skyspherePath = oldSkysphere.path;
     unit.skysphere.rotation = oldSkysphere.rotation;
   }
+
+  // skysphere.path property
   Object.defineProperty(unit.skysphere, "path", {
     get: function() {
       return skyspherePath;
@@ -94,7 +108,7 @@ async function createNode(location, oldName = null, oldSkysphere = null, addedOn
       skyspherePath = newSkyspherePath;
 
       // update server data
-      server.updateNode(unit.nodeID, {
+      server.updateNode(unit.nodeURI, {
         skysphere: {
           path: skyspherePath,
           rotation: unit.skysphere.rotation,
@@ -102,12 +116,12 @@ async function createNode(location, oldName = null, oldSkysphere = null, addedOn
       });
     } /* set */
   });
-  
+
   // get node id
   if (addedOnServer) {
-    unit.nodeID = oldNodeID;
+    unit.nodeURI = oldnodeURI;
   } else {
-    unit.nodeID = await server.addNode({
+    unit.nodeURI = await server.addNode({
       name: unit.name,
       position: position,
       skysphere: {
@@ -119,26 +133,28 @@ async function createNode(location, oldName = null, oldSkysphere = null, addedOn
 
   // add name if it's undefined
   if (name === null) {
-    name = `node#${unit.nodeID}`;
+    name = `node#${unit.nodeURI}`;
   }
 
   unit.banner = await Banner.create(system, name, location, 2);
   unit.banner.show = false;
 
-  nodes[unit.nodeID.toStr()] = unit;
-  unit.banner.nodeID = unit.nodeID;
+  nodes[unit.nodeURI.toStr()] = unit;
+  unit.banner.nodeURI = unit.nodeURI;
 
   return unit;
 } /* createNode */
 
+// destroy node
 function destroyNode(node) {
   breakNodeConnections(node);
   node.doSuicide = true;
   node.banner.doSuicide = true;
-  server.delNode(node.nodeID);
+  server.delNode(node.nodeURI);
 
-  delete nodes[node.nodeID];
+  delete nodes[node.nodeURI];
 } /* destroyNode */
+
 
 let connectionPrimitive = await system.createPrimitive(rnd.Topology.cylinder(), await system.createMaterial("./shaders/connection"));
 let connectionUniqueID = 0;
@@ -159,6 +175,15 @@ async function createConnection(firstNode, secondNode, addedOnServer = false) {
   }
 
   let transform = mth.Mat4.identity();
+
+
+  // Working with backend
+  if (!addedOnServer) {
+    if (!(await server.connectNodes(firstNode.nodeURI, secondNode.nodeURI))) {
+      return null;
+    }
+  }
+
 
   let unit = await system.addUnit(function() {
     return {
@@ -183,22 +208,19 @@ async function createConnection(firstNode, secondNode, addedOnServer = false) {
   });
   unit.updateTransform();
 
-  // Working with backend
-  if (!addedOnServer) {
-    await server.connectNodes(firstNode.nodeID, secondNode.nodeID);
-  }
-
   connections[unit.connectionID] = unit;
 
   return unit;
 } /* createConnection */
 
+
 function destroyConnection(connection) {
   connection.doSuicide = true;
-  console.log(connection.first.nodeID.toStr(), connection.second.nodeID.toStr());
-  server.disconnectNodes(connection.first.nodeID, connection.second.nodeID);
+  console.log(connection.first.nodeURI.toStr(), connection.second.nodeURI.toStr());
+  server.disconnectNodes(connection.first.nodeURI, connection.second.nodeURI);
   delete connections[connection.connectionID];
 } /* destroyConnection */
+
 
 // update transform matrices of all connections with node.
 function updateConnectionTransforms(node = null) {
@@ -209,7 +231,8 @@ function updateConnectionTransforms(node = null) {
   }
 } /* updateConnectionTransforms */
 
-// delete all connections with node
+
+// delete all connections with specified node
 function breakNodeConnections(node = null) {
   let keyList = [];
   for (const [key, value] of Object.entries(connections)) {
@@ -224,138 +247,111 @@ function breakNodeConnections(node = null) {
   }
 } /* breakNodeConnections */
 
-// add previous session nodes and connections
+
+// load previous session nodes and connections
 async function addServerData() {
-  let serverNodeIDs = await server.getAllNodes();
+  for (let nodeURI of await server.getAllNodes()) {
+    let serverNode = await server.getNode(nodeURI);
 
-  for (let nodeID of serverNodeIDs) {
-    let serverNode = await server.getNode(nodeID);
-
-    await createNode(mth.Vec3.fromObject(serverNode.position), serverNode.name, serverNode.skysphere, true, nodeID);
+    await createNode(mth.Vec3.fromObject(serverNode.position), serverNode.name, serverNode.skysphere, true, nodeURI);
   }
 
   // same shit, but with nice sth
   let serverConnections = await server.getAllConnections();
 
   for (let connection of serverConnections) {
-    let node1 = nodes[connection[0].toStr()];
-    let node2 = nodes[connection[1].toStr()];
-
-    createConnection(
-      node1,
-      node2,
-      true
-    );
+    createConnection(nodes[connection[0].toStr()], nodes[connection[1].toStr()], true);
   }
 } /* addServerData */
 await addServerData();
 
-// shows basic construction, will be handling minimap
-const baseConstructionShower = await system.addUnit(async function() {
+
+// displays basic construction
+const baseConstructionDisplayer = await system.addUnit(async function() {
   let baseConstructionMaterial = await system.createMaterial("./shaders/default");
 
   let pointPlane = await system.createPrimitive(rnd.Topology.plane(2, 2), baseConstructionMaterial);
   let transform = mth.Mat4.scale(new mth.Vec3(400, 1, 400)).mul(mth.Mat4.translate(new mth.Vec3(-200, 0, -200)));
 
   return {
-    name: "baseConstruction",
+    type: "baseConstruction",
     response(system) {
       system.drawPrimitive(pointPlane, transform);
     } /* response */
   };
-}); /* baseConstructionShower */
+}); /* baseConstructionDisplayer */
 
+// adding node
 system.canvas.addEventListener("mousedown", (event) => {
-  if ((event.buttons & 1) !== 1 || !event.altKey) {
-    return;
-  }
-
-  let coord = system.getPositionByCoord(event.clientX, event.clientY);
-  let name = system.getUnitByCoord(event.clientX, event.clientY).name;
-
-  if (name === "baseConstruction" && (coord.x !== coord.y || coord.y !== coord.z)) {
-    let add = true;
-
-    for (let i = 0; i < nodes.length; i++) {
-      if (nodes[i].pos.distance(coord) <= 3) {
-        add = false;
-        break;
-      }
+  if ((event.buttons & 1) === 1 && event.altKey) {
+    let unit = system.getUnitByCoord(event.clientX, event.clientY);
+  
+    if (unit !== undefined && unit.type === "baseConstruction") {
+      createNode(system.getPositionByCoord(event.clientX, event.clientY));
     }
-    if (add) {
-      createNode(coord);
-    }
-
   }
 }); /* event system.canvas:"mousedown" */
 
-// edit connections between nodes
-const editorConnections = await system.addUnit(async function() {
-  let pointEvent = null;
-  let eventPair = null;
+let eventPair = null;
 
-  system.canvas.addEventListener("mousedown", (event) => {
-    if ((event.buttons & 2) === 2 && !event.shiftKey && event.altKey) {
-      pointEvent = {
-        x: event.clientX,
-        y: event.clientY
-      };
-    }
-  });
+// adding connection between nodes
+system.canvas.addEventListener("mousedown", (event) => {
+  if ((event.buttons & 2) === 2 && !event.shiftKey && event.altKey) {
+    let pointEvent = {
+      x: event.clientX,
+      y: event.clientY
+    };
 
-  return {
-    response(system) {
-      if (pointEvent === null) {
-        return;
-      }
+    let unit = system.getUnitByCoord(pointEvent.x, pointEvent.y);
 
-      let unit = system.getUnitByCoord(pointEvent.x, pointEvent.y);
-
-      if (unit !== undefined && unit.type === "node") {
-
-        pointEvent.unit = unit;
-
-        if (eventPair === null) {
-          eventPair = {
-            first: pointEvent,
-            second: null
-          };
-          eventPair.first.bannerPromise = Banner.create(system, "First element", unit.pos, 4);
-        } else {
-          eventPair.second = pointEvent;
-
-          // erase banner
-          eventPair.first.bannerPromise.then(banner => banner.doSuicide = true);
-          // refuse connection with invalid banner
-          if (eventPair.first.unit.doSuicide) {
-            eventPair = null;
-            return;
-          }
-
-          createConnection(eventPair.first.unit, eventPair.second.unit);
-
+    if (unit !== undefined && unit.type === "node") {
+  
+      pointEvent.unit = unit;
+  
+      if (eventPair === null) {
+        eventPair = {
+          first: pointEvent,
+          second: null
+        };
+        eventPair.first.bannerPromise = Banner.create(system, "First element", unit.pos, 4);
+      } else {
+        eventPair.second = pointEvent;
+  
+        // erase banner
+        eventPair.first.bannerPromise.then(banner => banner.doSuicide = true);
+        // refuse connection with invalid banner
+        if (eventPair.first.unit.doSuicide) {
           eventPair = null;
+          return;
         }
+  
+        createConnection(eventPair.first.unit, eventPair.second.unit);
+  
+        eventPair = null;
       }
-      pointEvent = null;
-    } /* response */
-  };
-}); /* editorConnections */
+    }
+    pointEvent = null;
+  }
+}); /* event system.canvas:"mousedown" */
+
+
+
+// UI handling
 
 let nodeParameters = document.getElementById("nodeParameters");
 let nodeInputParameters = {
-  nodeID: document.getElementById("nodeID"),
+  nodeURI: document.getElementById("nodeURI"),
   nodeName: document.getElementById("nodeName"),
   skyspherePath: document.getElementById("skyspherePath"),
   makeDefault: document.getElementById("makeDefault"),
   deleteNode: document.getElementById("deleteNode")
-};
+}; /* nodeInputParameters */
 
 let connectionParameters = document.getElementById("connectionParameters");
 let connectionInputParameters = {
   nodesURI: document.getElementById("connectionNodesURI"),
   deleteConnection: document.getElementById("deleteConnection")
-};
+}; /* connectionInputParameters */
 
 // node pointing unit
 let doMoveNode = true;
@@ -386,7 +382,7 @@ system.canvas.addEventListener("mousemove", (event) => {
   }
 });
 
-// unit content show selector
+// unit name shower
 system.canvas.addEventListener("mousedown", (event) => {
   if ((event.buttons & 1) !== 1 || event.ctrlKey) {
     return;
@@ -394,7 +390,7 @@ system.canvas.addEventListener("mousedown", (event) => {
 
   let unit = system.getUnitByCoord(event.clientX, event.clientY);
 
-  nodeInputParameters.nodeID.innerText = "";
+  nodeInputParameters.nodeURI.innerText = "";
   nodeInputParameters.nodeName.value = "";
   nodeInputParameters.skyspherePath.value = "";
 
@@ -410,7 +406,7 @@ system.canvas.addEventListener("mousedown", (event) => {
     nodeParameters.removeAttribute("hidden");
     connectionParameters.setAttribute("hidden", "");
 
-    nodeInputParameters.nodeID.innerText = unit.nodeID.toStr();
+    nodeInputParameters.nodeURI.innerText = unit.nodeURI.toStr();
     nodeInputParameters.nodeName.value = unit.name;
     nodeInputParameters.skyspherePath.value = unit.skysphere.path;
 
@@ -419,7 +415,7 @@ system.canvas.addEventListener("mousedown", (event) => {
       doMoveNode = true;
     }
   } else if (unit.type === "connection") {
-    connectionInputParameters.nodesURI.innerText = `${unit.first.nodeID.toStr()} - ${unit.second.nodeID.toStr()}`;
+    connectionInputParameters.nodesURI.innerText = `${unit.first.nodeURI.toStr()} - ${unit.second.nodeURI.toStr()}`;
 
     nodeParameters.setAttribute("hidden", "");
     connectionParameters.removeAttribute("hidden");
@@ -431,10 +427,12 @@ system.canvas.addEventListener("mousedown", (event) => {
   }
 }); /* event system.canvas:"mousedown" */
 
+
 system.canvas.addEventListener("mouseup", (event) => {
   doMoveNode = false;
 }); /* event system.canvas:"mouseup" */
 
+// node movement handler
 system.canvas.addEventListener("mousemove", (event) => {
   if (activeContentShowNode !== null && doMoveNode) {
     let position = system.getPositionByCoord(event.clientX, event.clientY);
@@ -448,7 +446,6 @@ system.canvas.addEventListener("mousemove", (event) => {
 }); /* event system.canvas:"mousemove" */
 
 
-// current unit controls
 
 nodeInputParameters.nodeName.addEventListener("change", () => {
   if (activeContentShowNode !== null) {
@@ -464,7 +461,7 @@ nodeInputParameters.skyspherePath.addEventListener("change", () => {
 
 nodeInputParameters.makeDefault.addEventListener("click", () => {
   if (activeContentShowNode !== null) {
-    server.setDefNodeURI(activeContentShowNode.nodeID).then(() => {console.log(`new default node: ${activeContentShowNode.name}`)});
+    server.setDefNodeURI(activeContentShowNode.nodeURI).then(() => {console.log(`new default node: ${activeContentShowNode.name}`)});
   }
 }); /* event nodeInputParameters.makeDefault:"click" */
 
