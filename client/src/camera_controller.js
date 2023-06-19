@@ -14,7 +14,7 @@ export class Arcball {
     };
     
     const onMouseMove = function(event) {
-      if (!event.ctrlKey) {
+      if (event.altKey || event.shiftKey) {
         return;
       }
 
@@ -55,7 +55,7 @@ export class Arcball {
     const onWheel = function(event) {
       let delta = event.deltaY / 5000.0;
 
-      loc = loc.add(at.sub(loc).mul(delta));
+      loc = loc.sub(at.sub(loc).mul(delta));
     };
     
     let canvas = document.getElementById("canvas");
@@ -116,16 +116,15 @@ export class Rotator {
     const onWheel = function(event) {
       let delta = event.deltaY / 700.0;
 
-
-      camera.projSize -= camera.projSize * delta;
+      camera.projSize += camera.projSize * delta;
       camera.projSize = clamp(camera.projSize, 0.1, 1);
     }; /* onWheel */
-    
+
     let canvas = document.getElementById("canvas");
-    
+
     canvas.addEventListener("mousemove", onMouseMove);
     canvas.addEventListener("wheel", onWheel);
-    
+
     return camera;
   } /* create */
 } /* Arcball */

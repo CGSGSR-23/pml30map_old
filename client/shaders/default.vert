@@ -25,7 +25,7 @@ void main()
 
   drawPosition = (transformWorld * vec4(inPosition, 1)).xyz;
   drawTexCoord = inTexCoord;
-  drawNormal = inNormal * mat3(inverse(transpose(transformWorld)));
+  drawNormal = normalize(inNormal * mat3(inverse(transpose(transformWorld))));
 
   drawID = currentID;
 }

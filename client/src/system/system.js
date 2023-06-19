@@ -43,9 +43,9 @@ export class System {
 
     gl.enable(WebGL2RenderingContext.DEPTH_TEST);
     gl.depthFunc(WebGL2RenderingContext.LEQUAL);
-    gl.enable(WebGL2RenderingContext.CULL_FACE);
+    // gl.enable(WebGL2RenderingContext.CULL_FACE);
 
-    gl.cullFace(WebGL2RenderingContext.BACK);
+    // gl.cullFace(WebGL2RenderingContext.BACK);
 
     this.renderQueue = [];
     this.markerRenderQueue = [];

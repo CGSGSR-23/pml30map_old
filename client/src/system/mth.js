@@ -319,7 +319,7 @@ export class Camera {
   correctedProjSize = new Size(0.01, 0.01);
   near = 0.01;
   far = 8192;
-  
+
   // current screen resolution
   screenSize;
 

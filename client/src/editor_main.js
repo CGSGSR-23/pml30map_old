@@ -22,14 +22,14 @@ let nodes = {};
 let connections = {};
 
 
-let nodePrim = await system.createPrimitive(rnd.Topology.sphere(), await system.createMaterial("./shaders/point_sphere")); // primitive of any node displayed
+let nodePrim = await system.createPrimitive(rnd.Topology.sphere(0.2), await system.createMaterial("./shaders/point_sphere")); // primitive of any node displayed
 
 // creates new node
 async function createNode(location, oldName = null, oldSkysphere = null, addedOnServer = false, oldnodeURI = null) {
   // check if new node is possible to be placed
   if (!addedOnServer) {
     for (let oldNode of Object.values(nodes)) {
-      if (location.distance(oldNode.pos) <= 3) {
+      if (location.distance(oldNode.pos) <= 0.3) {
         return null;
       }
     }
@@ -60,7 +60,7 @@ async function createNode(location, oldName = null, oldSkysphere = null, addedOn
     set: function(newPosition) {
       // check if node is possible to move here
       for (const value of Object.values(nodes)) {
-        if (value !== unit &&  value.pos.distance(newPosition) <= 2) {
+        if (value !== unit &&  value.pos.distance(newPosition) <= 0.3) {
           return false;
         }
       }
@@ -184,7 +184,6 @@ async function createConnection(firstNode, secondNode, addedOnServer = false) {
     }
   }
 
-
   let unit = await system.addUnit(function() {
     return {
       first: firstNode,
@@ -198,7 +197,7 @@ async function createConnection(firstNode, secondNode, addedOnServer = false) {
         dir = dir.mul(1.0 / dist);
         let elevation = Math.acos(dir.y);
 
-        transform = mth.Mat4.scale(new mth.Vec3(0.5, dist, 0.5)).mul(mth.Mat4.rotate(elevation, new mth.Vec3(-dir.z, 0, dir.x))).mul(mth.Mat4.translate(unit.first.pos));
+        transform = mth.Mat4.scale(new mth.Vec3(0.1, dist, 0.1)).mul(mth.Mat4.rotate(elevation, new mth.Vec3(-dir.z, 0, dir.x))).mul(mth.Mat4.translate(unit.first.pos));
       }, /* updateTransform */
 
       response(system) {
@@ -268,15 +267,30 @@ await addServerData();
 
 // displays basic construction
 const baseConstructionDisplayer = await system.addUnit(async function() {
-  let baseConstructionMaterial = await system.createMaterial("./shaders/default");
+  let pointPlane = await system.createPrimitive(
+    await rnd.Topology.model_obj("./models/PML30_simple.obj"),
+    await system.createMaterial("./shaders/baseConstruction")
+  );
 
-  let pointPlane = await system.createPrimitive(rnd.Topology.plane(2, 2), baseConstructionMaterial);
-  let transform = mth.Mat4.scale(new mth.Vec3(400, 1, 400)).mul(mth.Mat4.translate(new mth.Vec3(-200, 0, -200)));
+  pointPlane.material.uboNameOnShader = "materialUBO";
+  pointPlane.material.ubo = system.createUniformBuffer();
+
+  let floorBase = 3.5;
+  let floorHeight = 4.5;
+  
+  let cuttingHeight = document.getElementById("baseConstructionCuttingHeight");
+  cuttingHeight.addEventListener("change", () => {
+    pointPlane.material.ubo.writeData(new Float32Array([floorBase + cuttingHeight.value * floorHeight]));
+  });
+
+  // initialization
+  pointPlane.material.ubo.writeData(new Float32Array([floorBase + 3.0 * floorHeight]));
+  cuttingHeight.value = 3.0;
 
   return {
     type: "baseConstruction",
     response(system) {
-      system.drawPrimitive(pointPlane, transform);
+      system.drawPrimitive(pointPlane);
     } /* response */
   };
 }); /* baseConstructionDisplayer */
@@ -444,8 +458,6 @@ system.canvas.addEventListener("mousemove", (event) => {
     }
   }
 }); /* event system.canvas:"mousemove" */
-
-
 
 nodeInputParameters.nodeName.addEventListener("change", () => {
   if (activeContentShowNode !== null) {
