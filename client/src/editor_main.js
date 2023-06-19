@@ -249,9 +249,9 @@ function breakNodeConnections(node = null) {
 
 // load previous session nodes and connections
 async function addServerData() {
-  for (let nodeURI of await server.getAllNodes()) {
-    let serverNode = await server.getNode(nodeURI);
-
+  let serverNodeURIs = await server.getAllNodes();
+  for (let serverNodeURI of serverNodeURIs) {
+    let serverNode = await server.getNode(serverNodeURI);
     await createNode(mth.Vec3.fromObject(serverNode.position), serverNode.name, serverNode.skysphere, true, nodeURI);
   }
 

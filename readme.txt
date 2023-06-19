@@ -38,3 +38,8 @@ getDefNodeURIReq: () -> uri; +
 
 Support:
 ping: (value) -> value; +
+
+image folders:
+f{number} - floor {number}
+o - outdoor
+b - basement
