@@ -28,7 +28,7 @@ in float drawID;
 void main() {
   vec3 dir = camDir.xyz + camRight.xyz * drawTexCoord.x + camUp.xyz * drawTexCoord.y;
   vec2 basicTexCoord = vec2(
-    sign(dir.z) * acos(dir.x / length(dir.xz)) / PI / 2.0 + 2.0,
+    sign(dir.z) * acos(dir.x / length(dir.xz)) / PI / 2.0 + 2.25,
     acos(dir.y / length(dir)) / PI
   );
   vec2 texCoord = vec2(
@@ -48,6 +48,8 @@ void main() {
   } else {
     outColorID = vec4(texture(Texture0, texCoord).xyz, drawID);
   }
+
+  outColorID.xyz = outColorID.xyz;
 } /* main */
 
 /* default_pbr.frag */

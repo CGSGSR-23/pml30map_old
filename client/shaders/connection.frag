@@ -11,6 +11,6 @@ in float drawID;
 uniform sampler2D Texture0;
 
 void main() {
-  outColorID = vec4(0.5, 0.5, 0.5, drawID);
+  outColorID = vec4(0.3, 0.3, 0.3, drawID);
   outPosition = vec4(drawPosition, 1);
 } /* main */

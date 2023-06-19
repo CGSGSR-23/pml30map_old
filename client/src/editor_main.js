@@ -267,30 +267,38 @@ await addServerData();
 
 // displays basic construction
 const baseConstructionDisplayer = await system.addUnit(async function() {
-  let pointPlane = await system.createPrimitive(
+  let baseConstructionMaterial = await system.createMaterial("./shaders/baseConstruction");
+  let buildingModel = await system.createPrimitive(
     await rnd.Topology.model_obj("./models/PML30_simple.obj"),
-    await system.createMaterial("./shaders/baseConstruction")
+    baseConstructionMaterial
+  );
+  let worldPlane = await system.createPrimitive(
+    rnd.Topology.plane(2, 2),
+    await system.createMaterial("./shaders/worldPlane")
   );
 
-  pointPlane.material.uboNameOnShader = "materialUBO";
-  pointPlane.material.ubo = system.createUniformBuffer();
+  baseConstructionMaterial.uboNameOnShader = "materialUBO";
+  baseConstructionMaterial.ubo = system.createUniformBuffer();
 
   let floorBase = 3.5;
   let floorHeight = 4.5;
   
   let cuttingHeight = document.getElementById("baseConstructionCuttingHeight");
   cuttingHeight.addEventListener("change", () => {
-    pointPlane.material.ubo.writeData(new Float32Array([floorBase + cuttingHeight.value * floorHeight]));
+    baseConstructionMaterial.ubo.writeData(new Float32Array([floorBase + cuttingHeight.value * floorHeight]));
   });
 
   // initialization
-  pointPlane.material.ubo.writeData(new Float32Array([floorBase + 3.0 * floorHeight]));
+  baseConstructionMaterial.ubo.writeData(new Float32Array([floorBase + 3.0 * floorHeight]));
   cuttingHeight.value = 3.0;
+
+  let worldPlaneTransform = mth.Mat4.translate(new mth.Vec3(-0.5, 0, -0.5)).mul(mth.Mat4.scale(new mth.Vec3(100, 100, 100)));
 
   return {
     type: "baseConstruction",
     response(system) {
-      system.drawPrimitive(pointPlane);
+      system.drawPrimitive(buildingModel);
+      system.drawPrimitive(worldPlane, worldPlaneTransform);
     } /* response */
   };
 }); /* baseConstructionDisplayer */
