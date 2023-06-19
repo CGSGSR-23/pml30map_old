@@ -151,11 +151,14 @@ class MongoDB { // Nodes data base
     // Clear Collection
     await this.clearDB();
     // Load nodes
-    await this.nodesC.insertMany(newDB.nodes);
+    if (newDB.nodes.length > 0)
+      await this.nodesC.insertMany(newDB.nodes);
     // Load connections
-    await this.connectionsC.insertMany(newDB.connections);
+    if (newDB.connections.length > 0)
+      await this.connectionsC.insertMany(newDB.connections);
     // Load variables
-    await this.varsC.insertMany(newDB.variables);
+    if (newDB.variables.length > 0)
+      await this.varsC.insertMany(newDB.variables);
     
     return true;
   }

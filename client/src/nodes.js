@@ -1,4 +1,5 @@
 import { io } from "socket.io-client";
+//import FileSaver from "file-saver";
 
 export class URI {
   id; // id in Uint8Array!!!
@@ -143,6 +144,17 @@ export class Connection {
 
   async getDB() {
     return this.send("getDBReq");
+  }
+
+  async saveDB( outFileName ) {
+    let dbText = JSON.stringify(await this.getDB());
+  
+    var a = document.createElement('a');
+    var file = new Blob([dbText], {type: "text/plain;charset=utf-8"});
+    a.href = URL.createObjectURL(file);
+    a.download = outFileName;
+    a.click();
+    return dbText;
   }
 
   async loadDB( db ) {

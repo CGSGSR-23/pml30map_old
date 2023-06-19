@@ -60,6 +60,11 @@
           <input id="dbSource" type="file">
         </label><br/>
         <input id="loadDBButton" type="button" value="load DB"><br/>
+        <label> Save file name:
+          <input id="dbOutFileName" type="text">
+        </label><br/>
+        <input id="createDBFileButton" type="button" value="create DB file"><br/>
+        <a href="" id="saveDBButton">save to File</a>
       </div>
     </div>
     <div id="output" style="flex: 2; background-color: black; color:azure"></div>
@@ -218,13 +223,38 @@
       };
 
       document.getElementById("getDBButton").onclick = async ()=>{
-        output.innerHTML = JSON.stringify(await connection.getDB());
+        output.innerText = JSON.stringify(await connection.getDB());
       };
 
       document.getElementById("loadDBButton").onclick = async ()=>{
-        let newDB = JSON.parse(document.getElementById('dbSource').value);
+        let DBfile = document.getElementById('dbSource').files[0];
         
-        output.innerHTML = await connection.loadDB(newDB);
+        //output.innerHTML = await connection.loadDB(newDB);
+
+        var reader = new FileReader();
+        reader.onload = async (event)=>{
+          console.log(JSON.parse(event.target.result));
+          output.innerText = await connection.loadDB(JSON.parse(event.target.result));
+        }
+        reader.readAsText(DBfile);
+      };
+
+      document.getElementById("createDBFileButton").onclick = async ()=>{
+  //      function download(text, name, type) {
+  //        //var a = document.getElementById("saveDBButton");
+  //        var a = document.createElement('a');
+  //        //a.setAttribute('href',desiredLink);
+//
+  //        var file = new Blob([text], {type: type});
+  //        a.href = URL.createObjectURL(file);
+  //        a.download = name;
+  //        a.click();
+  //      }
+      output.innerText = await connection.saveDB(document.getElementById("dbOutFileName").value);
+
+        //let dbText = JSON.stringify(await connection.getDB());
+
+//        download(dbText, document.getElementById("dbOutFileName").value, "text/plain;charset=utf-8");
       };
 
     </script>

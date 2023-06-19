@@ -1,0 +1,17 @@
+body {
+  font-family: 'consolas';
+  /*display: flex;*/
+  /*flex-direction: column;*/
+}
+
+#canvas, #ui { 
+  position: fixed;
+};
+
+#canvas {
+  z-index: 1;
+};
+
+#ui {
+  z-index: 3;
+};
