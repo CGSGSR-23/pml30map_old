@@ -147,18 +147,26 @@ class MongoDB { // Nodes data base
     };
   }
 
+  static recreateID( array ) {
+    for (let i = 0; i < array.length; i++)
+      if (array[i] != undefined)
+        if (array[i]._id != undefined)
+          array[i]._id = new ObjectId(array[i]._id);//delete array[i]._id;
+    return array;
+  }
+
   async loadDB( newDB ) {
     // Clear Collection
     await this.clearDB();
     // Load nodes
     if (newDB.nodes.length > 0)
-      await this.nodesC.insertMany(newDB.nodes);
+      await this.nodesC.insertMany(MongoDB.recreateID(newDB.nodes));
     // Load connections
     if (newDB.connections.length > 0)
-      await this.connectionsC.insertMany(newDB.connections);
+      await this.connectionsC.insertMany(MongoDB.recreateID(newDB.connections));
     // Load variables
     if (newDB.variables.length > 0)
-      await this.varsC.insertMany(newDB.variables);
+      await this.varsC.insertMany(MongoDB.recreateID(newDB.variables));
     
     return true;
   }

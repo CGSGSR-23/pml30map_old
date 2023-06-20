@@ -1,20 +1,7 @@
 <!DOCTYPE html>
 
 <html>
-  <style>
-    #canvas, #ui { 
-      position: fixed;
-    };
-
-    #canvas {
-      z-index: 1;
-    };
-
-    #ui {
-      z-index: 3;
-    };
-  </style>
-
+  <link rel="stylesheet" type="text/css" href="bin/css/index.css"/>
   <head>
     <title>PML30 interactive map editor</title>
   </head>
@@ -22,9 +9,15 @@
   <body style="margin: 0; overflow: hidden;">
     <canvas id="canvas" oncontextmenu="return false"></canvas>
     <script type="module" src="./viewer_bundle.js"></script>
-
-    <div id="ui">
-      <div>Location: <t id="currentNodeName"></t></div>
+    <div class="ui">
+      <h2 class="uiHeader">Settings</h2>
+      <!--<div>Location: <t id="currentNodeName"></t></div>-->
+      <div class="map">
+        Mini mapa:<br/>
+        <canvas id="mapCanvas">
+          
+        </canvas>
+      </div>
       <div>Skysphere rotation: <input type="range" id="skysphereRotation" value="0" min="0" max="314"></div>
       <input type="button" id="toEditor" value="to Editor">
     </div>

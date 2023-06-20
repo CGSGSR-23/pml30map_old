@@ -116,6 +116,17 @@ skysphereRotation.addEventListener("input", (event) => {
   });
 }); /* event skysphereRotation:"input" */
 
+// Mini map part
+
+var mapCanvas = document.getElementById('mapCanvas');
+var mapContext = mapCanvas.getContext('2d');
+
+console.log("MAPA:");
+console.log(mapContext);
+
+
+mapContext.fillRect(0, 0, mapCanvas.width, mapCanvas.height);
+
 system.run();
 
 /* viewer_main.js */
