@@ -17,6 +17,50 @@ let server = new Connection();
 system.addUnit(cameraController.Arcball.create);
 system.addUnit(Skysphere.create, "./bin/imgs/lakhta.png");
 
+
+// add base construction
+let floorBase = 3.5;
+let floorHeight = 4.5;
+let cuttingHeight;
+
+let cuttingHeightElement = document.getElementById("baseConstructionCuttingHeight");
+cuttingHeightElement.value = 3.0;
+cuttingHeight = floorBase + 3.0 * floorHeight;
+
+let baseConstructionMaterial = await system.createMaterial("./shaders/baseConstruction");
+cuttingHeightElement.addEventListener("input", () => {
+  cuttingHeight = floorBase + cuttingHeightElement.value * floorHeight;
+  baseConstructionMaterial.ubo.writeData(new Float32Array([cuttingHeight]));
+});
+
+// displays basic construction
+const baseConstructionDisplayer = await system.addUnit(async function() {
+  let buildingModel = await system.createPrimitive(
+    await rnd.Topology.model_obj("./models/PML30_simple.obj"),
+    baseConstructionMaterial
+  );
+  let worldPlane = await system.createPrimitive(
+    rnd.Topology.plane(2, 2),
+    await system.createMaterial("./shaders/worldPlane")
+  );
+
+  baseConstructionMaterial.uboNameOnShader = "materialUBO";
+  baseConstructionMaterial.ubo = system.createUniformBuffer();
+
+  // initialization
+  baseConstructionMaterial.ubo.writeData(new Float32Array([floorBase + 3.0 * floorHeight]));
+
+  let worldPlaneTransform = mth.Mat4.translate(new mth.Vec3(-0.5, 0, -0.5)).mul(mth.Mat4.scale(new mth.Vec3(100, 100, 100)));
+
+  return {
+    type: "baseConstruction",
+    response(system) {
+      system.drawPrimitive(buildingModel);
+      system.drawPrimitive(worldPlane, worldPlaneTransform);
+    } /* response */
+  };
+}); /* baseConstructionDisplayer */
+
 // node and connection units collection
 let nodes = {};
 let connections = {};
@@ -46,7 +90,9 @@ async function createNode(location, oldName = null, oldSkysphere = null, addedOn
 
       type: "node",
       response(system) {
-        system.drawMarkerPrimitive(nodePrim, transform);
+        if (location.y <= cuttingHeight) {
+          system.drawMarkerPrimitive(nodePrim, transform);
+        }
       }, /* response */
     };
   });
@@ -201,7 +247,9 @@ async function createConnection(firstNode, secondNode, addedOnServer = false) {
       }, /* updateTransform */
 
       response(system) {
-        system.drawMarkerPrimitive(connectionPrimitive, transform);
+        if (firstNode.pos.y <= cuttingHeight || secondNode.pos.y <= cuttingHeight) {
+          system.drawMarkerPrimitive(connectionPrimitive, transform);
+        }
       } /* response */
     };
   });
@@ -263,45 +311,6 @@ async function addServerData() {
   }
 } /* addServerData */
 await addServerData();
-
-
-// displays basic construction
-const baseConstructionDisplayer = await system.addUnit(async function() {
-  let baseConstructionMaterial = await system.createMaterial("./shaders/baseConstruction");
-  let buildingModel = await system.createPrimitive(
-    await rnd.Topology.model_obj("./models/PML30_simple.obj"),
-    baseConstructionMaterial
-  );
-  let worldPlane = await system.createPrimitive(
-    rnd.Topology.plane(2, 2),
-    await system.createMaterial("./shaders/worldPlane")
-  );
-
-  baseConstructionMaterial.uboNameOnShader = "materialUBO";
-  baseConstructionMaterial.ubo = system.createUniformBuffer();
-
-  let floorBase = 3.5;
-  let floorHeight = 4.5;
-  
-  let cuttingHeight = document.getElementById("baseConstructionCuttingHeight");
-  cuttingHeight.addEventListener("input", () => {
-    baseConstructionMaterial.ubo.writeData(new Float32Array([floorBase + cuttingHeight.value * floorHeight]));
-  });
-
-  // initialization
-  baseConstructionMaterial.ubo.writeData(new Float32Array([floorBase + 3.0 * floorHeight]));
-  cuttingHeight.value = 3.0;
-
-  let worldPlaneTransform = mth.Mat4.translate(new mth.Vec3(-0.5, 0, -0.5)).mul(mth.Mat4.scale(new mth.Vec3(100, 100, 100)));
-
-  return {
-    type: "baseConstruction",
-    response(system) {
-      system.drawPrimitive(buildingModel);
-      system.drawPrimitive(worldPlane, worldPlaneTransform);
-    } /* response */
-  };
-}); /* baseConstructionDisplayer */
 
 // adding node
 system.canvas.addEventListener("mousedown", (event) => {

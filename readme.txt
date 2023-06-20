@@ -43,3 +43,6 @@ image folders:
 f{number} - floor {number}
 o - outdoor
 b - basement
+p - programmirovochnaya
+ms - main staircase
+es - english staircase
