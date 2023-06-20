@@ -195,6 +195,12 @@ async function main() {
       res(result);
     });
 
+    socket.on("addDataReq", async ( db, res )=>{
+      let result = await DB.addDB(db);
+      LogMsg("addDataReq", db, result);
+      res(result);
+    });
+
   });
 
   server.listen(3047, () => {

@@ -60,6 +60,7 @@
           <input id="dbSource" type="file">
         </label><br/>
         <input id="loadDBButton" type="button" value="load DB"><br/>
+        <input id="addDBButton" type="button" value="add DB"><br/>
         <label> Save file name:
           <input id="dbOutFileName" type="text">
         </label><br/>
@@ -234,6 +235,19 @@
         reader.onload = async (event)=>{
           console.log(JSON.parse(event.target.result));
           output.innerText = await connection.loadDB(JSON.parse(event.target.result));
+        }
+        reader.readAsText(DBfile);
+      };
+
+      document.getElementById("addDBButton").onclick = async ()=>{
+        let DBfile = document.getElementById('dbSource').files[0];
+        
+        //output.innerHTML = await connection.loadDB(newDB);
+
+        var reader = new FileReader();
+        reader.onload = async (event)=>{
+          console.log(JSON.parse(event.target.result));
+          output.innerText = await connection.addDB(JSON.parse(event.target.result));
         }
         reader.readAsText(DBfile);
       };

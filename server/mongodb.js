@@ -170,6 +170,17 @@ class MongoDB { // Nodes data base
     
     return true;
   }
+
+  async addDB( newDB ) {
+    // Load nodes
+    if (newDB.nodes.length > 0)
+      await this.nodesC.insertMany(MongoDB.recreateID(newDB.nodes));
+    // Load connections
+    if (newDB.connections.length > 0)
+      await this.connectionsC.insertMany(MongoDB.recreateID(newDB.connections));
+    
+    return true;
+  }
 }
 
 module.exports = MongoDB;

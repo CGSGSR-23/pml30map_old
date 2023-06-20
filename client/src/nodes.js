@@ -161,4 +161,9 @@ export class Connection {
     return this.send("loadDBReq", db);
   }
 
+  async addDB( db ) {
+    return this.send("addDataReq", db);
+  }
+  
+  
 } /* Connection */
