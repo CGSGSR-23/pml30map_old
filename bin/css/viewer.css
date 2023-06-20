@@ -1,0 +1,36 @@
+body {
+  font-family: 'consolas';
+  /*display: flex;*/
+  /*flex-direction: column;*/
+}
+
+h2.uiHeader {
+  size: 2em;
+  margin-top: 0;
+  margin-bottom: 0.5em;
+  /*background-color: green;*/
+}
+
+div.ui {
+  position: fixed;
+  z-index: 3;
+  background-color: brown;
+  overflow: hidden;
+  max-height: 2em;
+  padding: 0.5em;
+  border-bottom-right-radius: 0.5em;
+
+  transition: max-height 0.5s;
+  
+  &:hover {
+    max-height: 50%;
+  }
+}
+#mapCanvas {
+  border: 2px dashed green;
+}
+
+#canvas { 
+  position: fixed;
+  z-index: 1;
+}

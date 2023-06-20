@@ -252,7 +252,7 @@ async function addServerData() {
   let serverNodeURIs = await server.getAllNodes();
   for (let serverNodeURI of serverNodeURIs) {
     let serverNode = await server.getNode(serverNodeURI);
-    await createNode(mth.Vec3.fromObject(serverNode.position), serverNode.name, serverNode.skysphere, true, nodeURI);
+    await createNode(mth.Vec3.fromObject(serverNode.position), serverNode.name, serverNode.skysphere, true, serverNodeURI);
   }
 
   // same shit, but with nice sth

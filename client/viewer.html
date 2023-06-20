@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 
 <html>
-  <link rel="stylesheet" type="text/css" href="bin/css/index.css"/>
+  <link rel="stylesheet" type="text/css" href="bin/css/viewer.css"/>
   <head>
     <title>PML30 interactive map editor</title>
   </head>
@@ -11,13 +11,12 @@
     <script type="module" src="./viewer_bundle.js"></script>
     <div class="ui">
       <h2 class="uiHeader">Settings</h2>
-      <!--<div>Location: <t id="currentNodeName"></t></div>-->
-      <div class="map">
-        Mini mapa:<br/>
-        <canvas id="mapCanvas">
-          
-        </canvas>
-      </div>
+      <div>Location: <t id="currentNodeName"></t></div>
+      <!--<div class="map">-->
+      <!--  Mini mapa:<br/>-->
+      <!--  <canvas id="mapCanvas">-->
+      <!--  </canvas>-->
+      <!--</div>-->
       <div>Skysphere rotation: <input type="range" id="skysphereRotation" value="0" min="0" max="314"></div>
       <input type="button" id="toEditor" value="to Editor">
     </div>
