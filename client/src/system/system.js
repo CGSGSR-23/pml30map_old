@@ -193,6 +193,8 @@ export class System {
     Target.default(gl).bind();
     EmptyPrimitive.drawFromParams(this.gl, 4, Topology.TRIANGLE_STRIP, this.fsMaterial, this.cameraUBO);
     this.fsMaterial.unboundTextures();
+
+    gl.finish();
   } /* end */
 
   // genious function, but it works!
