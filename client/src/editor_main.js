@@ -284,7 +284,7 @@ const baseConstructionDisplayer = await system.addUnit(async function() {
   let floorHeight = 4.5;
   
   let cuttingHeight = document.getElementById("baseConstructionCuttingHeight");
-  cuttingHeight.addEventListener("change", () => {
+  cuttingHeight.addEventListener("input", () => {
     baseConstructionMaterial.ubo.writeData(new Float32Array([floorBase + cuttingHeight.value * floorHeight]));
   });
 

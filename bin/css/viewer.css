@@ -14,9 +14,9 @@ h2.uiHeader {
 div.ui {
   position: fixed;
   z-index: 3;
-  background-color: brown;
+  /* background-color: brown; */
   overflow: hidden;
-  max-height: 2em;
+  max-height: 100%;
   padding: 0.5em;
   border-bottom-right-radius: 0.5em;
 
