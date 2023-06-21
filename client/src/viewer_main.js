@@ -27,6 +27,7 @@ async function createArrow(direction) {
     return {
       type: "arrow",
       name: `arrow#${arrowUniqueID++}`,
+      direction: (new mth.Vec2(direction.x, direction.z)).normalize(),
       response(system) {
         system.drawMarkerPrimitive(arrowPrim, transform);
       } /* response */
@@ -119,17 +120,44 @@ skysphereRotation.addEventListener("input", (event) => {
   });
 }); /* event skysphereRotation:"input" */
 
-// Mini map part
-// 
-// var mapCanvas = document.getElementById('mapCanvas');
-// var mapContext = mapCanvas.getContext('2d');
-// 
-// console.log("MAPA:");
-// console.log(mapContext);
-// 
-// 
-// mapContext.fillRect(0, 0, mapCanvas.width, mapCanvas.height);
-// 
+document.addEventListener("keydown", async (event) => {
+  let direction = (new mth.Vec2(system.camera.dir.x, system.camera.dir.z)).normalize();
+
+  switch (event.key) {
+    case "ArrowUp":
+      break;
+
+    case "ArrowDown":
+      direction = direction.neg();
+      break;
+
+    case "ArrowLeft":
+      direction = direction.right();
+      break;
+
+    case "ArrowRight":
+      direction = direction.left();
+      break;
+
+    default:
+      return;
+  }
+
+  let maxArrow = null, maxArrowCoefficent = Math.SQRT1_2;
+  for (let arrow of arrows) {
+    let coefficent = arrow.direction.dot(direction);
+
+    if (coefficent > maxArrowCoefficent) {
+      maxArrow = arrow;
+      maxArrowCoefficent = coefficent;
+    }
+  }
+
+  if (maxArrow !== null) {
+    await setCurrentNode(maxArrow.target.uri);
+  }
+}); /* event document:"keydown" */
+
 system.run();
-// 
+
 /* viewer_main.js */

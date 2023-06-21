@@ -121,6 +121,14 @@ export class Vec2 {
     return new Vec2(this.x / len, this.y / len);
   } /* normalize */
 
+  neg() {
+    return new Vec2(-this.x, -this.y);
+  } /* neg */
+
+  left() {
+    return new Vec2(-this.y, this.x);
+  } /* right */
+
   right() {
     return new Vec2(this.y, -this.x);
   } /* right */
