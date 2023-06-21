@@ -21,6 +21,7 @@ export class System {
   lastUnitID = 0;
 
   currentObjectID = 0;
+  renderParams = {};
 
   constructor() {
     // WebGL initialization
@@ -41,7 +42,27 @@ export class System {
 
     this.gl = gl;
 
-    gl.enable(WebGL2RenderingContext.DEPTH_TEST);
+    let depthTest = false;
+    Object.defineProperty(this.renderParams, "depthTest", {
+      get() {
+        return depthTest;
+      },
+
+      set(newValue) {
+        if (newValue === depthTest) {
+          return;
+        }
+
+        if (newValue) {
+          gl.enable(WebGL2RenderingContext.DEPTH_TEST);
+        } else {
+          gl.disable(WebGL2RenderingContext.DEPTH_TEST)
+        }
+        depthTest = newValue;
+      }
+    });
+    this.renderParams.depthTest = true;
+
     gl.depthFunc(WebGL2RenderingContext.LEQUAL);
     // gl.enable(WebGL2RenderingContext.CULL_FACE);
 

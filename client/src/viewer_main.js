@@ -9,6 +9,8 @@ import { Skysphere } from "./skysphere.js";
 let system = new rnd.System();
 let server = new Connection();
 
+system.renderParams.depthTest = false;
+
 // camera controller
 let skysphere = await system.addUnit(Skysphere.create, "./bin/imgs/lakhta.png");
 let cameraController = system.addUnit(Rotator.create);
