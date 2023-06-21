@@ -10,6 +10,7 @@ let system = new rnd.System();
 let server = new Connection();
 
 system.renderParams.depthTest = false;
+system.renderParams.cullFace = true;
 
 // camera controller
 let skysphere = await system.addUnit(Skysphere.create, "./bin/imgs/lakhta.png");

@@ -23,6 +23,32 @@ export class System {
   currentObjectID = 0;
   renderParams = {};
 
+  addRenderParameter(GLenum, paramName, initialValue = true) {
+    let value = !initialValue;
+    let gl = this.gl;
+
+    Object.defineProperty(this.renderParams, paramName, {
+      configurable: false,
+      get() {
+        return value;
+      }, /* get */
+
+      set(newValue) {
+        if (newValue === value) {
+          return;
+        }
+
+        if (newValue) {
+          gl.enable(GLenum);
+        } else {
+          gl.disable(GLenum);
+        }
+        value = newValue;
+      } /* set */
+    }); /* property definition */
+    this.renderParams[paramName] = initialValue;
+  } /* addRenderParameter */
+
   constructor() {
     // WebGL initialization
     let canvas = document.getElementById("canvas");
@@ -42,26 +68,8 @@ export class System {
 
     this.gl = gl;
 
-    let depthTest = false;
-    Object.defineProperty(this.renderParams, "depthTest", {
-      get() {
-        return depthTest;
-      },
-
-      set(newValue) {
-        if (newValue === depthTest) {
-          return;
-        }
-
-        if (newValue) {
-          gl.enable(WebGL2RenderingContext.DEPTH_TEST);
-        } else {
-          gl.disable(WebGL2RenderingContext.DEPTH_TEST)
-        }
-        depthTest = newValue;
-      }
-    });
-    this.renderParams.depthTest = true;
+    this.addRenderParameter(WebGL2RenderingContext.DEPTH_TEST, "depthTest", true);
+    this.addRenderParameter(WebGL2RenderingContext.CULL_FACE, "cullFace", false);
 
     gl.depthFunc(WebGL2RenderingContext.LEQUAL);
     // gl.enable(WebGL2RenderingContext.CULL_FACE);

@@ -24,8 +24,6 @@ let floorHeight = 4.5;
 let cuttingHeight;
 
 let cuttingHeightElement = document.getElementById("baseConstructionCuttingHeight");
-// cuttingHeightElement.value = 3.0;
-console.log(`value: ${cuttingHeightElement.value}`);
 cuttingHeight = floorBase + cuttingHeightElement.value * floorHeight;
 
 let baseConstructionMaterial = await system.createMaterial("./shaders/baseConstruction");
