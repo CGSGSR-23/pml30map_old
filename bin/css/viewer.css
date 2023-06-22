@@ -1,36 +1,90 @@
+:root {
+  --bg-color: rgba(205, 205, 205, 0.631);
+  --sub-bg-color: rgba(101, 101, 101, 0.631);
+  --main-color: rgb(55, 55, 55);
+  --sub-main-color: rgb(31, 31, 31);
+  --text-color: white;
+  --acitve-text-color: black;
+}
+
 body {
   font-family: 'consolas';
   /*display: flex;*/
   /*flex-direction: column;*/
 }
 
-h2.uiHeader {
-  size: 2em;
-  margin-top: 0;
-  margin-bottom: 0.5em;
-  /*background-color: green;*/
+#canvas { 
+  position: fixed;
+  z-index: 1;
 }
 
-div.ui {
+div#ui {
+  background-color: var(--bg-color);
+  /*width: 20em;*/
+
   position: fixed;
-  z-index: 3;
-  /* background-color: brown; */
-  overflow: hidden;
-  max-height: 100%;
+  z-index: 2;
   padding: 0.5em;
   border-bottom-right-radius: 0.5em;
+  border: 2px solid var(--text-color);
+  overflow: hidden;
 
-  transition: max-height 0.5s;
-  
+  /*max-height: 2em;*/
+
+  transition: max-height 0.3s;
+
   &:hover {
     max-height: 50%;
   }
 }
-#mapCanvas {
-  border: 2px dashed green;
+
+h2#uiHeader {
+  size: 2em;
+  margin-top: 0;
+  margin-bottom: 0.7em;
 }
 
-#canvas { 
-  position: fixed;
-  z-index: 1;
+div#minimap {
+  display: flex;
+  flex-direction: row;
+}
+
+div#floorSelector {
+  display: flex;
+  flex-direction: column;
+  margin-left: 0.2em;
+}
+
+input.button.floor {
+  background-color: var(--main-color);
+  color: var(--text-color);
+  margin: 0.1em;
+  aspect-ratio: 1 / 1;
+  border-radius: 25%;
+  border: 2px solid var(--main-color);
+
+  transition: background-color 0.1s, border 0.1s, color 0.1s;
+
+  &:hover {
+    border: 2px solid var(--text-color);
+  }
+
+  &:active {
+    border: 2px solid var(--text-color);
+    background-color: var(--text-color);
+    color: var(--main-color);
+  }
+}
+input.button.floor.active {
+  border: 2px solid var(--text-color);
+  background-color: var(--text-color);
+  color: var(--main-color);
+}
+
+#minimapCanvas {
+  width: 200px;
+  height: 200px;
+  background-color: var(--sub-bg-color);
+  border-radius: 0.5em;
+  border: 1px dashed red;
 }

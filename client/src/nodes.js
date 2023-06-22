@@ -164,6 +164,9 @@ export class Connection {
   async addDB( db ) {
     return this.send("addDataReq", db);
   }
+  async getNearest( pos ) {
+    return new URI(await this.send("getNearestReq", pos));
+  }
   
   
 } /* Connection */

@@ -48,7 +48,7 @@ function clearArrows() {
 } /* clearArrows */
 
 let currentNodeName = document.getElementById("currentNodeName");
-let skysphereRotation = document.getElementById("skysphereRotation");
+//let skysphereRotation = document.getElementById("skysphereRotation");
 
 const skysphereFolderPath = "./bin/imgs/";
 
@@ -67,7 +67,7 @@ async function setCurrentNode(nodeURI) {
 
   // wait then new node enviroment is loaded
 
-  skysphereRotation.value = currentNode.skysphere.rotation / (Math.PI * 2) * 314;
+  //skysphereRotation.value = currentNode.skysphere.rotation / (Math.PI * 2) * 314;
   await Promise.all([
     skysphere.slide(skysphereFolderPath + currentNode.skysphere.path, currentNode.skysphere.rotation),
 
@@ -116,17 +116,17 @@ document.getElementById("toEditor").addEventListener("click", () => {
   window.location.href = "./index.html";
 }); /* event document.getElementById("toEditor"):"click" */
 
-skysphereRotation.addEventListener("input", (event) => {
-  let angle = skysphereRotation.value / 314 * Math.PI * 2;
-
-  skysphere.rotation = angle;
-  server.updateNode(currentNodeURI, {
-    skysphere: {
-      rotation: angle,
-      path: currentNode.skysphere.path,
-    }
-  });
-}); /* event skysphereRotation:"input" */
+//skysphereRotation.addEventListener("input", (event) => {
+//  let angle = skysphereRotation.value / 314 * Math.PI * 2;
+//
+//  skysphere.rotation = angle;
+//  server.updateNode(currentNodeURI, {
+//    skysphere: {
+//      rotation: angle,
+//      path: currentNode.skysphere.path,
+//    }
+//  });
+//}); /* event skysphereRotation:"input" */
 
 document.addEventListener("keydown", async (event) => {
   let direction = (new mth.Vec2(system.camera.dir.x, system.camera.dir.z)).normalize();
@@ -165,6 +165,149 @@ document.addEventListener("keydown", async (event) => {
     await setCurrentNode(maxArrow.target.uri);
   }
 }); /* event document:"keydown" */
+
+
+
+var mapCanvas = document.getElementById('minimapCanvas');
+mapCanvas.width = mapCanvas.height = 200;
+var mapContext = mapCanvas.getContext('2d');
+
+function loadImg( fileName ) {
+  var img = new Image();
+  img.src = "./bin/imgs/" + fileName;
+  return new Promise( async (resolve) => {
+    img.onload = ()=>{ resolve(img); };
+  });
+}
+
+var floorsMaps = [];
+
+function setActive( button, newValue ) {
+  button.className = button.className.replace(" active", "");
+
+  if (newValue == 1)
+  {
+    button.className += " active";
+  }
+  else if (newValue == 0) {
+  }
+}
+
+function onFloorchange( newCurFloor ) {
+  console.log("NEW ACTIVE FLOOR: " + newCurFloor);
+}
+
+var floorButtons = [];
+var curFloor = 0;
+for (let i = -1; i <= 4; i++)
+{
+  let floor = document.getElementById("floor" + i);
+  
+  if (floor == undefined)
+  {
+    console.log("FUCK YOU, FLOOR " + i);
+    continue;
+  }
+  floor.onclick = ()=>{
+    if (curFloor !== undefined)
+      setActive(floorButtons[curFloor], 0);
+    setActive(floor, 1);
+    onFloorchange(i);
+    curFloor = i;
+  };
+
+  floorsMaps[i] = await loadImg(`minimap/f${i}.png`);
+  
+  floorButtons[i] = floor;
+}
+console.log(floorsMaps);
+//console.log(minimapF1);
+
+var miniMapScale = .2;
+var miniMapOffset = new mth.Vec2(0, 0);
+var centerPos = new mth.Vec2(710, 340);
+var mapPos1 = new mth.Vec2(11.5, 16.5);
+var minimapPos1 = new mth.Vec2(floorsMaps[0].width - centerPos.x, floorsMaps[0].height - centerPos.y);
+var mapCoef = mapPos1.length() / minimapPos1.length();
+
+var minimapGraph = await server.getAllNodesData();
+
+mapCanvas.onwheel = (e)=>{
+  
+  let coef = Math.pow(0.95, e.deltaY / 100);
+  console.log(e);
+  let mousePos = new mth.Vec2(e.offsetX, e.offsetY);
+
+  miniMapOffset = mousePos.sub(mousePos.sub(miniMapOffset).mul(coef));
+
+  miniMapScale *= coef;
+
+  console.log(miniMapOffset);
+  console.log(miniMapScale);
+};
+
+mapCanvas.oncontextmenu = ( e )=>{
+  e.preventDefault();
+};
+mapCanvas.onmousemove = ( e )=>{
+  if (e.buttons & 2) // Drag
+    miniMapOffset = miniMapOffset.add(new mth.Vec2(e.movementX, e.movementY));   
+};
+
+mapCanvas.onclick = async ( e )=>{
+  if (curFloor === undefined)
+    return;
+    
+  let mPos = new mth.Vec2(e.offsetX, e.offsetY).sub(miniMapOffset).mul(1 / miniMapScale);
+
+  console.log("AAAAAAAAAAAAAAAAAAAAAAAAAaaa");
+  console.log(mapCoef);
+  console.log("In");
+  console.log(mPos);
+  console.log(mPos.sub(centerPos));
+  let pos = mPos.sub(centerPos).mul(mapCoef);
+  console.log("Out");
+  console.log(pos);
+
+  let y = 0;
+
+  switch (curFloor) {
+    case -1:
+      y = -2.5;
+      break;
+    case 0:
+      y = 0;
+      break;
+    case 1:
+      y = 1.5;
+      break;
+    case 2:
+      y = 6;
+      break;
+    case 3:
+      y = 11;
+      break;
+    case 4:
+      y = 16;
+      break;
+  }
+
+  let nearestURI = await server.getNearest(new mth.Vec3(pos.x, y, pos.y));
+  console.log(nearestURI);
+  
+  await setCurrentNode(nearestURI);
+  //await setCurrentNode();
+}
+
+window.setInterval(()=>{
+  // Render
+  mapContext.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
+  
+  if (curFloor === undefined)
+    return;
+
+  mapContext.drawImage(floorsMaps[curFloor], miniMapOffset.x, miniMapOffset.y, floorsMaps[curFloor].width * miniMapScale, floorsMaps[curFloor].height * miniMapScale);
+}, 10);
 
 system.run();
 

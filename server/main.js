@@ -6,6 +6,7 @@ const path = require("path");
 const { Server } = require("socket.io");
 const fileupload = require('express-fileupload');
 const MongoDB = require('./mongodb.js');
+const mth = require("./mth.js");
 
 const app = express();
 app.use(morgan("combined"));
@@ -200,6 +201,29 @@ async function main() {
       let result = await DB.addDB(db);
       LogMsg("addDataReq", db, result);
       res(result);
+    });
+
+    socket.on("getNearestReq", async ( inPos, res )=>{
+      //let result = await DB.addDB(db);
+      let pos = new mth.Vec3(inPos.x, inPos.y, inPos.z);
+      let nodesData = await DB.getAllNodesData();
+      
+      if (nodesData.length <= 0)
+        return null;
+  
+      let nearest = nodesData[0];
+  
+      for (let i = 0; i < nodesData.length; i++)
+      {
+        let nPos = new mth.Vec3(nearest.position.x, nearest.position.y, nearest.position.z);
+        let iPos = new mth.Vec3(nodesData[i].position.x, nodesData[i].position.y, nodesData[i].position.z);
+      
+        if (pos.sub(iPos).length() < pos.sub(nPos).length())  
+          nearest = nodesData[i];
+      }
+      let out = nearest._id.id;
+      LogMsg("getNearestReq", pos, out);
+      res(out);
     });
 
   });

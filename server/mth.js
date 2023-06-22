@@ -1,4 +1,4 @@
-export class Vec3 {
+class Vec3 {
   x;
   y;
   z;
@@ -71,7 +71,7 @@ export class Vec3 {
   } /* fromObject */
 } /* Vec3 */
 
-export class Vec2 {
+class Vec2 {
   x;
   y;
 
@@ -93,10 +93,10 @@ export class Vec2 {
   } /* sub */
 
   mul(m2) {
-    if (m2 instanceof Vec2)
+    if (typeof(m2) == "Vec2")
       return new Vec2(this.x * m2.x, this.y * m2.y);
     else
-      return new Vec2(this.x * m2, this.y * m2);
+      return new Vec2(this.x * m2,   this.y * m2);
   } /* mul */
 
   length2() {
@@ -121,20 +121,12 @@ export class Vec2 {
     return new Vec2(this.x / len, this.y / len);
   } /* normalize */
 
-  neg() {
-    return new Vec2(-this.x, -this.y);
-  } /* neg */
-
-  left() {
-    return new Vec2(-this.y, this.x);
-  } /* right */
-
   right() {
     return new Vec2(this.y, -this.x);
   } /* right */
 } /* Vec2 */
 
-export class Size {
+class Size {
   w;
   h;
 
@@ -148,7 +140,7 @@ export class Size {
   } /* copy */
 } /* Size */
 
-export class Mat4 {
+class Mat4 {
   m;
 
   constructor(v00, v01, v02, v03,
@@ -321,7 +313,7 @@ export class Mat4 {
   } /* frustum */
 } /* Mat4 */
 
-export class Camera {
+class Camera {
   // camera projection shape params
   projSize = new Size(0.01, 0.01);
   correctedProjSize = new Size(0.01, 0.01);
@@ -386,3 +378,5 @@ export class Camera {
     this.dir   = new Vec3(this.view.m[ 2], this.view.m[ 6], this.view.m[10]).mul(-1);
   } /* set */
 } /* Camera */
+
+module.exports = {Vec2, Vec3, Mat4, Camera};
