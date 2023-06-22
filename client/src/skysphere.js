@@ -15,7 +15,7 @@ export class Skysphere {
       async init(system) {
         mtl = await system.createMaterial("./shaders/skysphere");
 
-        tex = system.createTexture(filePath);
+        tex = await system.createTexture(filePath);
 
         mtl.textures.push(tex);
         mtl.ubo = system.createUniformBuffer();
@@ -31,7 +31,9 @@ export class Skysphere {
       async slide(newTexturePath, newTextureRotation, duration = 0.33) {
         return new Promise(async (resolve, reject) => {
           // add new texture
-          mtl.textures.push(await system.createTexture(newTexturePath));
+          let newTexture = await system.createTexture();
+          await newTexture.load(newTexturePath);
+          mtl.textures.push(newTexture);
   
           slideStartTime = null;
           slideDuration = duration;

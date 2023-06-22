@@ -66,26 +66,34 @@ async function setCurrentNode(nodeURI) {
   clearArrows();
 
   // wait then new node enviroment is loaded
+
   skysphereRotation.value = currentNode.skysphere.rotation / (Math.PI * 2) * 314;
-  await skysphere.slide(skysphereFolderPath + currentNode.skysphere.path, currentNode.skysphere.rotation);
-  // await skysphere.texture.load(skysphereFolderPath + currentNode.skysphere.path);
+  await Promise.all([
+    skysphere.slide(skysphereFolderPath + currentNode.skysphere.path, currentNode.skysphere.rotation),
 
-  let neighbourURIs = await server.getNeighbours(nodeURI);
+    new Promise(async (resolve) => {
+      let neighbourURIs = await server.getNeighbours(nodeURI);
+      // delete old neighbours...
+      for (let neighbour of neighbours) {
+        neighbour.doSuicide = true; // SPb
+      }
 
-  // delete old neighbours...
-  for (let neighbour of neighbours) {
-    neighbour.doSuicide = true; // SPb
-  }
-  // get new neighbours
-  neighbours = [];
-  for (let neighbourURI of neighbourURIs) {
-    let neighbour = await server.getNode(neighbourURI);
-    neighbour.position = mth.Vec3.fromObject(neighbour.position); // update vec3
-    neighbour.uri = neighbourURI;
+      // get new neighbours
+      neighbours = [];
+      for (let neighbourURI of neighbourURIs) {
+        let neighbour = await server.getNode(neighbourURI);
+        neighbour.position = mth.Vec3.fromObject(neighbour.position); // update vec3
+        neighbour.uri = neighbourURI;
+        
+        neighbours.push(neighbour);
+      }
 
-    neighbours.push(neighbour);
+      resolve();
+    })
+  ]);
 
-    // add arrow pointing to neighbour
+  // add arrows
+  for (let neighbour of Object.values(neighbours)) {
     let arrow = await createArrow(neighbour.position.sub(currentNode.position).normalize());
     arrow.target = neighbour;
   }
