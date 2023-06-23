@@ -260,14 +260,7 @@ mapCanvas.onclick = async ( e )=>{
     
   let mPos = new mth.Vec2(e.offsetX, e.offsetY).sub(miniMapOffset).mul(1 / miniMapScale);
 
-  console.log("AAAAAAAAAAAAAAAAAAAAAAAAAaaa");
-  console.log(mapCoef);
-  console.log("In");
-  console.log(mPos);
-  console.log(mPos.sub(centerPos));
   let pos = mPos.sub(centerPos).mul(mapCoef);
-  console.log("Out");
-  console.log(pos);
 
   let y = 0;
 
