@@ -16,6 +16,10 @@ out vec3 drawPosition;
 out float drawDistCoef;
 out float drawID;
 
+uniform arrowUBO {
+  float arrowScale;
+};
+
 const vec2 positions[4] = vec2[4](
   vec2(1,  0),
   vec2(0,  1.5),
@@ -26,7 +30,12 @@ const vec2 positions[4] = vec2[4](
 const float distCoefs[4] = float[4](1.0, 0.0, 0.0, 0.0);
 
 void main() {
-  vec4 p = vec4(positions[gl_VertexID].x + 3.0, -16.0, positions[gl_VertexID].y, 1);
+  vec4 p = vec4(
+    (positions[gl_VertexID].x + 2.71) * arrowScale,
+    -16.0,
+    positions[gl_VertexID].y * arrowScale,
+    1
+  );
 
   gl_Position = (transformViewProj * transformWorld) * p;
   drawPosition = (transformWorld * p).xyz;
