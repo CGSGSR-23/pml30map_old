@@ -6,6 +6,13 @@
   </head>
   <body style="display: flex; flex-direction: row;">
     <div class="props" style="flex: 1; overflow-y: auto;">
+      <input type="button" id="toViewer" value="To Viewer">
+      <script>
+        // preview mode redirecting button
+        document.getElementById("toViewer").addEventListener("click", () => {
+          window.location.href = "./index.html" + window.location.search;
+        }); /* event document.getElementById("preview"):"click" */
+      </script>
       <div style="border: 2px dashed red; padding: 10px; margin: 5px;">
         <h1>Add node</h1>
         <label> Image value:

@@ -541,8 +541,14 @@ connectionInputParameters.deleteConnection.addEventListener("click", () => {
 
 // preview mode redirecting button
 document.getElementById("toPreview").addEventListener("click", () => {
-  window.location.href = "./index.html";
+  window.location.href = "./index.html" + window.location.search;
 }); /* event document.getElementById("preview"):"click" */
+
+// preview mode redirecting button
+document.getElementById("toServer").addEventListener("click", () => {
+  window.location.href = "./server.html" + window.location.search;
+}); /* event document.getElementById("preview"):"click" */
+
 
 // start system
 system.run();

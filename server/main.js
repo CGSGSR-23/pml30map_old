@@ -7,63 +7,103 @@ const { Server } = require("socket.io");
 const fileupload = require('express-fileupload');
 const MongoDB = require('./mongodb.js');
 const mth = require("./mth.js");
+const { MongoDBCollectionNamespace } = require("mongodb");
+const { allowedNodeEnvironmentFlags } = require("process");
 
 const app = express();
 app.use(morgan("combined"));
 app.use(fileupload());
-app.use('/', express.static("../client"));
 app.use('/bin', express.static("../bin"));
+
+const enableKeys = 1; // 0 - no check
+                      // 1- simple 404 page
+                      // 2 - redirect to rickroll
+
+const studentKey = "R1BNTDMwTUFQX0FDQ0VTU19LRVlfQURNSU4=";
+const adminKey = "R1BNTDMwTUFQX0FDQ0VTU19LRVlfU1RVREVOVA==";
+
+app.use('/', (req, res, next )=>{
+  if (enableKeys > 0)
+    switch(req.path) {
+      case '/server.html':
+        if (req.query.key != adminKey)
+        {
+          if (enableKeys === 2)
+            res.redirect("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+          else
+            res.sendStatus(404);
+          return;
+        }
+      case '/editor.html':
+        if (req.query.key != adminKey)
+        {
+          if (enableKeys === 2)
+            res.redirect("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+          else
+            res.sendStatus(404);
+          return;
+        }
+    }
+  next(); 
+}, express.static("../client"));
 
 const server = http.createServer(app);
 const io = new Server(server);
 
+
 async function main() {
   var DB = new MongoDB;
 
-  // await DB.init("mongodb+srv://doadmin:i04J9b2t1X853Cuy@db-mongodb-pml30-75e49c39.mongo.ondigitalocean.com/admin?tls=true&authSource=admin");
-  await DB.init("mongodb://127.0.0.1:27017");
+  await DB.init("mongodb+srv://doadmin:i04J9b2t1X853Cuy@db-mongodb-pml30-75e49c39.mongo.ondigitalocean.com/admin?tls=true&authSource=admin");
+  //await DB.init("mongodb://127.0.0.1:27017");
 
-  app.post('/addNode', (req, res) => {
-    console.log("POST 'addNode':");
-    const imgName = "NODE_IMG" + getValidImageURI() + ".png";
-    const imgPath = path.normalize(__dirname + '/../bin/imgs/' + imgName);
-    const image = req.files.img;
-
-    image.mv(imgPath, (error) => {
-      if (error) { // ERROR
-        console.error("IMAGE LOAD ERROR: " + error);
-        res.writeHead(500, {
-          'Content-Type': 'application/json'
-        })
-        res.end(JSON.stringify({status: 'error', message: error}));
-        return;
-      }
-
-      // Add node
-      var nodeURI = addNode({
-        image: imgName,
-        pos: req.body.pos,
-        connections: req.body.connections,
-      });
-
-      res.writeHead(200, {
-        'Content-Type': 'application/json'
-      });
-      res.end(JSON.stringify({status: 'success', node_uri: nodeURI}));
-    });
-  });
+  //app.post('/addNode', (req, res) => {
+  //  console.log("POST 'addNode':");
+  //  const imgName = "NODE_IMG" + getValidImageURI() + ".png";
+  //  const imgPath = path.normalize(__dirname + '/../bin/imgs/' + imgName);
+  //  const image = req.files.img;
+//
+  //  image.mv(imgPath, (error) => {
+  //    if (error) { // ERROR
+  //      console.error("IMAGE LOAD ERROR: " + error);
+  //      res.writeHead(500, {
+  //        'Content-Type': 'application/json'
+  //      })
+  //      res.end(JSON.stringify({status: 'error', message: error}));
+  //      return;
+  //    }
+//
+  //    // Add node
+  //    var nodeURI = addNode({
+  //      image: imgName,
+  //      pos: req.body.pos,
+  //      connections: req.body.connections,
+  //    });
+//
+  //    res.writeHead(200, {
+  //      'Content-Type': 'application/json'
+  //    });
+  //    res.end(JSON.stringify({status: 'success', node_uri: nodeURI}));
+  //  });
+  //});
 
   // For test
-  
-  //var addedURI = await nodesDB.addNode({
-  //  image: "lakhta.png",
-  //  pos: [0, 0, 0],
-  //  connections: [],
-  //});
-  //await nodesDB.setDefNodeURI(addedURI);
+  app.use("/index.html", (req, res)=>{
+    debugger;
+    res.sendFile("../client/index.html");
+  });
   
   io.on("connection", (socket) => {
     console.log(`Client connected with id: ${socket.id}`);
+
+    var accessLevel = 0;
+    // 0 - guest
+    // 1 - student
+    // 2 - admin
+    if (socket.request._query.key === studentKey)
+      accessLevel = 1; // Student
+    else if (socket.request._query.key === adminKey)
+      accessLevel = 2; // Admin
 
     function LogMsg( msgName, input, output ) {
       console.log(`<--- MESSAGE '${msgName}' --->`);

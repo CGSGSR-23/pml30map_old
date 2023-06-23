@@ -69,13 +69,24 @@ class MongoDB { // Nodes data base
   //////////////////// Connections
 
   async addConnection( uri1, uri2 ) {
+    if (uri1 == uri2) // Check for connecting node with itself
+      return; 
+
     let uri1Str = "[" + new Uint8Array(uri1).toString() + "]";
     let uri2Str = "[" + new Uint8Array(uri2).toString() + "]";
+
+    let n1 = this.getNode(uri1);
+    let n2 = this.getNode(uri2);
+  
+    if (n1 == null || n2 == null) // Check for nodes validity
+      return;
+
     var c1 = await this.connectionsC.findOne({ id1: uri1Str, id2: uri2Str }),
         c2 = await this.connectionsC.findOne({ id1: uri2Str, id2: uri1Str });
 
-    if (c1 != null || c1 != null)
+    if (c1 != null || c1 != null) // Check for connections existing
       return false;
+
     var insertedURI = (await this.connectionsC.insertOne({ id1: uri1Str, id2: uri2Str })).insertedId;
     console.log("Inserted URI: ");
     console.log(insertedURI);

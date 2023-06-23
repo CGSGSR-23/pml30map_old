@@ -113,7 +113,7 @@ system.canvas.addEventListener("click", (event) => {
 
 // return to editor
 document.getElementById("toEditor").addEventListener("click", () => {
-  window.location.href = "./editor.html";
+  window.location.href = "./editor.html" + window.location.search;
 }); /* event document.getElementById("toEditor"):"click" */
 
 //skysphereRotation.addEventListener("input", (event) => {
