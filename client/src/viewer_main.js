@@ -62,6 +62,7 @@ async function setCurrentNode(nodeURI) {
 
   currentNode.position = mth.Vec3.fromObject(currentNode.position);
   currentNodeName.innerText = currentNode.name;
+  setFloor(currentNode.floor);
 
   clearArrows();
 
@@ -166,6 +167,7 @@ document.addEventListener("keydown", async (event) => {
   }
 }); /* event document:"keydown" */
 
+// Minimap part
 
 var mapCanvas = document.getElementById('minimapCanvas');
 mapCanvas.width = mapCanvas.height = 200;
@@ -197,31 +199,33 @@ function onFloorchange( newCurFloor ) {
 }
 
 var floorButtons = [];
-var curFloor = 0;
+var curFloor;
+
+
+function setFloor( newFloor ) {
+  if (curFloor !== undefined)
+    setActive(floorButtons[curFloor], 0);
+  setActive(floorButtons[newFloor], 1);
+  onFloorchange(newFloor);
+  curFloor = newFloor;
+}
+
 for (let i = -1; i <= 4; i++)
 {
-  let floor = document.getElementById("floor" + i);
+  floorButtons[i] = document.getElementById("floor" + i);
   
-  if (floor == undefined)
+  if (floorButtons[i] == undefined)
   {
     console.log("FUCK YOU, FLOOR " + i);
     continue;
   }
-  floor.onclick = ()=>{
-    if (curFloor !== undefined)
-      setActive(floorButtons[curFloor], 0);
-    setActive(floor, 1);
-    onFloorchange(i);
-    curFloor = i;
+  floorButtons[i].onclick = ()=>{
+    setFloor(i);
   };
 
   floorsMaps[i] = await loadImg(`minimap/f${i}.png`);
-  
-  floorButtons[i] = floor;
 }
-//console.log(floorsMaps);
-//console.log(minimapF1);
-setActive(floorButtons[curFloor], 1);
+//setFloor(0);
 
 var miniMapScale = .2;
 var miniMapOffset = new mth.Vec2(0, 0);
@@ -260,7 +264,7 @@ mapCanvas.onclick = async ( e )=>{
   let mPos = new mth.Vec2(e.offsetX, e.offsetY).sub(miniMapOffset).mul(1 / miniMapScale);
 
   let pos = mPos.sub(centerPos).mul(mapCoef);
-
+  
   let nearestURI = await server.getNearest(new mth.Vec3(pos.x, 0, pos.y), curFloor);
   console.log(nearestURI);
   

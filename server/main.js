@@ -88,11 +88,6 @@ async function main() {
   //});
 
   // For test
-  app.use("/index.html", (req, res)=>{
-    debugger;
-    res.sendFile("../client/index.html");
-  });
-  
   io.on("connection", (socket) => {
     console.log(`Client connected with id: ${socket.id}`);
 
