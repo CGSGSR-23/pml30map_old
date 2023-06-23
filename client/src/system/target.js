@@ -32,7 +32,7 @@ export class Target {
     // create target textures
     this.drawBuffers = [];
     for (let i = 0; i < attachmentCount; i++) {
-      this.attachments[i] = new Texture(gl, Texture.FLOAT, 4);
+      this.attachments[i] = new Texture(gl, Texture.HALF_FLOAT, 4);
       this.drawBuffers.push(gl.COLOR_ATTACHMENT0 + i);
     }
     gl.drawBuffers(this.drawBuffers);
@@ -80,7 +80,7 @@ export class Target {
     // create target textures
     let drawBuffers = [];
     for (let i = 0; i < this.attachments.length; i++) {
-      this.attachments[i] = new Texture(gl, Texture.FLOAT, 4);
+      this.attachments[i] = new Texture(gl, Texture.HALF_FLOAT, 4);
       drawBuffers.push(gl.COLOR_ATTACHMENT0 + i);
     }
     gl.drawBuffers(drawBuffers);

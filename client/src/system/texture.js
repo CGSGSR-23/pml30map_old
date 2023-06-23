@@ -12,6 +12,14 @@ function getFormat(componentType, componentCount) {
         componentType: WebGL2RenderingContext.FLOAT,
       };
 
+    case Texture.HALF_FLOAT:
+      const halfFloatInternals = [WebGL2RenderingContext.R16F, WebGL2RenderingContext.RG16F, WebGL2RenderingContext.RGB16F, WebGL2RenderingContext.RGBA16F];
+      return {
+        format: fmts[componentCount - 1],
+        internal: halfFloatInternals[componentCount - 1],
+        componentType: WebGL2RenderingContext.HALF_FLOAT
+      };
+
     case Texture.UNSIGNED_BYTE:
       const byteInternals = [WebGL2RenderingContext.R8, WebGL2RenderingContext.RG8, WebGL2RenderingContext.RGB8, WebGL2RenderingContext.RGBA8];
       return {
@@ -44,8 +52,9 @@ export class Texture {
   id;
 
   static FLOAT         = 0;
-  static UNSIGNED_BYTE = 1;
-  static DEPTH         = 2;
+  static HALF_FLOAT    = 1;
+  static UNSIGNED_BYTE = 2;
+  static DEPTH         = 3;
 
   constructor(gl, componentType = Texture.FLOAT, componentCount = 1) {
     this.gl = gl;

@@ -61,7 +61,7 @@ export class System {
       throw Error("Can't initialize WebGL2");
     }
 
-    let extensions = ["EXT_color_buffer_float", "OES_texture_float_linear"];
+    let extensions = ["EXT_color_buffer_float"];
     for (let i = 0; i < extensions.length; i++)
       if (gl.getExtension(extensions[i]) == null)
         throw Error(`"${extensions[i]}" extension required`);
