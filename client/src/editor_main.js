@@ -204,7 +204,6 @@ function destroyNode(node) {
   delete nodes[node.nodeURI];
 } /* destroyNode */
 
-
 let connectionPrimitive = await system.createPrimitive(rnd.Topology.cylinder(), await system.createMaterial("./shaders/connection"));
 let connectionUniqueID = 0;
 async function createConnection(firstNode, secondNode, addedOnServer = false) {
@@ -548,7 +547,6 @@ document.getElementById("toPreview").addEventListener("click", () => {
 document.getElementById("toServer").addEventListener("click", () => {
   window.location.href = "./server.html" + window.location.search;
 }); /* event document.getElementById("preview"):"click" */
-
 
 // start system
 system.run();
