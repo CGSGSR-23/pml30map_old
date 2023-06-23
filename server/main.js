@@ -20,8 +20,8 @@ const io = new Server(server);
 async function main() {
   var DB = new MongoDB;
 
-  await DB.init("mongodb+srv://doadmin:i04J9b2t1X853Cuy@db-mongodb-pml30-75e49c39.mongo.ondigitalocean.com/admin?tls=true&authSource=admin");
-  // await DB.init("mongodb://127.0.0.1:27017");
+  // await DB.init("mongodb+srv://doadmin:i04J9b2t1X853Cuy@db-mongodb-pml30-75e49c39.mongo.ondigitalocean.com/admin?tls=true&authSource=admin");
+  await DB.init("mongodb://127.0.0.1:27017");
 
   app.post('/addNode', (req, res) => {
     console.log("POST 'addNode':");

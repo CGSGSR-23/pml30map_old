@@ -17,7 +17,6 @@ let server = new Connection();
 system.addUnit(cameraController.Arcball.create);
 system.addUnit(Skysphere.create, "./bin/imgs/lakhta.png");
 
-
 // add base construction
 let floorBase = 0.0;
 let floorHeight = 4.5;
@@ -61,19 +60,19 @@ let connections = {};
 let nodePrim = await system.createPrimitive(rnd.Topology.sphere(0.2), await system.createMaterial("./shaders/point_sphere")); // primitive of any node displayed
 
 // creates new node
-async function createNode(location, oldName = null, oldSkysphere = null, addedOnServer = false, oldnodeURI = null) {
+async function createNode(data, addedOnServer = false) {
   // check if new node is possible to be placed
   if (!addedOnServer) {
     for (let oldNode of Object.values(nodes)) {
-      if (location.distance(oldNode.pos) <= 0.3) {
+      if (data.position.distance(oldNode.position) <= 0.3) {
         return null;
       }
     }
   }
 
-  let transform = mth.Mat4.translate(location);
+  let transform = mth.Mat4.translate(data.position);
 
-  let position = location.copy();
+  let position = data.position.copy();
   let unit = await system.addUnit(function() {
     return {
       skysphere: {
@@ -82,7 +81,7 @@ async function createNode(location, oldName = null, oldSkysphere = null, addedOn
 
       type: "node",
       response(system) {
-        if (location.y <= cuttingHeight) {
+        if (data.position.y <= cuttingHeight) {
           system.drawMarkerPrimitive(nodePrim, transform);
         }
       }, /* response */
@@ -90,15 +89,15 @@ async function createNode(location, oldName = null, oldSkysphere = null, addedOn
   });
 
   // position property
-  Object.defineProperty(unit, "pos", {
-    get: function() {
+  Object.defineProperty(unit, "position", {
+    get() {
       return position;
     }, /* get */
 
-    set: function(newPosition) {
+    set(newPosition) {
       // check if node is possible to move here
       for (const value of Object.values(nodes)) {
-        if (value !== unit &&  value.pos.distance(newPosition) <= 0.3) {
+        if (value !== unit &&  value.position.distance(newPosition) <= 0.3) {
           return false;
         }
       }
@@ -106,7 +105,7 @@ async function createNode(location, oldName = null, oldSkysphere = null, addedOn
       // place node
       position = newPosition.copy();
       transform = mth.Mat4.translate(position);
-      unit.banner.pos = position.add(new mth.Vec3(0, 2, 0));
+      unit.banner.position = position.add(new mth.Vec3(0, 2, 0));
       updateConnectionTransforms(unit);
 
       // update server data
@@ -115,25 +114,37 @@ async function createNode(location, oldName = null, oldSkysphere = null, addedOn
   });
 
   // name property
-  let name = oldName;
+  let name = data.name;
   Object.defineProperty(unit, "name", {
-    get: function() {
+    get() {
       return name;
     }, /* get */
 
-    set: function(newName) {
+    set(newName) {
       unit.banner.content = newName;
       name = newName;
       // update server data
 
       server.updateNode(unit.nodeURI, {name: name});
     } /* set */
-  });
+  }); /* property unit:"name" */
+
+  let floor = data.floor === undefined ? 0 : data.floor;
+  Object.defineProperty(unit, "floor", {
+    get() {
+      return floor;
+    }, /* get */
+
+    set(newFloor) {
+      floor = newFloor;
+      server.updateNode(unit.nodeURI, {floor: floor});
+    } /* set */
+  }); /* property unit:"floor" */
 
   let skyspherePath;
-  if (oldSkysphere !== null) {
-    skyspherePath = oldSkysphere.path;
-    unit.skysphere.rotation = oldSkysphere.rotation;
+  if (data.skysphere !== undefined) {
+    skyspherePath = data.skysphere.path;
+    unit.skysphere.rotation = data.skysphere.rotation;
   }
 
   // skysphere.path property
@@ -153,11 +164,11 @@ async function createNode(location, oldName = null, oldSkysphere = null, addedOn
         }
       });
     } /* set */
-  });
+  }); /* property unit.skysphere:"path" */
 
   // get node id
   if (addedOnServer) {
-    unit.nodeURI = oldnodeURI;
+    unit.nodeURI = data.nodeURI;
   } else {
     unit.nodeURI = await server.addNode({
       name: unit.name,
@@ -174,7 +185,7 @@ async function createNode(location, oldName = null, oldSkysphere = null, addedOn
     name = `node#${unit.nodeURI}`;
   }
 
-  unit.banner = await Banner.create(system, name, location, 2);
+  unit.banner = await Banner.create(system, name, position, 2);
   unit.banner.show = false;
 
   nodes[unit.nodeURI.toStr()] = unit;
@@ -230,16 +241,16 @@ async function createConnection(firstNode, secondNode, addedOnServer = false) {
       connectionID: connectionUniqueID++,
 
       updateTransform() {
-        let dir = unit.second.pos.sub(unit.first.pos);
+        let dir = unit.second.position.sub(unit.first.position);
         let dist = dir.length();
         dir = dir.mul(1.0 / dist);
         let elevation = Math.acos(dir.y);
 
-        transform = mth.Mat4.scale(new mth.Vec3(0.1, dist, 0.1)).mul(mth.Mat4.rotate(elevation, new mth.Vec3(-dir.z, 0, dir.x))).mul(mth.Mat4.translate(unit.first.pos));
+        transform = mth.Mat4.scale(new mth.Vec3(0.1, dist, 0.1)).mul(mth.Mat4.rotate(elevation, new mth.Vec3(-dir.z, 0, dir.x))).mul(mth.Mat4.translate(unit.first.position));
       }, /* updateTransform */
 
       response(system) {
-        if (firstNode.pos.y <= cuttingHeight || secondNode.pos.y <= cuttingHeight) {
+        if (firstNode.position.y <= cuttingHeight || secondNode.position.y <= cuttingHeight) {
           system.drawMarkerPrimitive(connectionPrimitive, transform);
         }
       } /* response */
@@ -294,7 +305,13 @@ async function addServerData() {
 
   for (let i = 0, count = serverNodes.length; i < count; i++) {
     let serverNode = serverNodes[i];
-    await createNode(mth.Vec3.fromObject(serverNode.position), serverNode.name, serverNode.skysphere, true, serverNodeURIs[i])
+    await createNode({
+      position: mth.Vec3.fromObject(serverNode.position),
+      name: serverNode.name,
+      skysphere: serverNode.skysphere,
+      nodeURI: serverNodeURIs[i],
+      floor: serverNode.floor,
+    }, true);
   }
   // let serverNodeURIs = await server.getAllNodes();
   // for (let serverNodeURI of serverNodeURIs) {
@@ -317,7 +334,10 @@ system.canvas.addEventListener("mousedown", (event) => {
     let unit = system.getUnitByCoord(event.clientX, event.clientY);
   
     if (unit !== undefined && unit.type === "baseConstruction") {
-      createNode(system.getPositionByCoord(event.clientX, event.clientY));
+      createNode({
+        position: system.getPositionByCoord(event.clientX, event.clientY),
+        name: "<empty_node>"
+      });
     }
   }
 }); /* event system.canvas:"mousedown" */
@@ -343,7 +363,7 @@ system.canvas.addEventListener("mousedown", (event) => {
           first: pointEvent,
           second: null
         };
-        eventPair.first.bannerPromise = Banner.create(system, "First element", unit.pos, 4);
+        eventPair.first.bannerPromise = Banner.create(system, "First element", unit.position, 4);
       } else {
         eventPair.second = pointEvent;
   
@@ -373,6 +393,8 @@ let nodeInputParameters = {
   nodeURI: document.getElementById("nodeURI"),
   nodeName: document.getElementById("nodeName"),
   skyspherePath: document.getElementById("skyspherePath"),
+  nodeFloor: document.getElementById("nodeFloor"),
+  nodeFloorValue: document.getElementById("nodeFloorValue"),
   makeDefault: document.getElementById("makeDefault"),
   deleteNode: document.getElementById("deleteNode")
 }; /* nodeInputParameters */
@@ -423,6 +445,7 @@ system.canvas.addEventListener("mousedown", (event) => {
   nodeInputParameters.nodeURI.innerText = "";
   nodeInputParameters.nodeName.value = "";
   nodeInputParameters.skyspherePath.value = "";
+  nodeInputParameters.nodeFloorValue.innerText = "";
 
   activeContentShowNode = null;
   activeContentShowConnection = null;
@@ -439,6 +462,8 @@ system.canvas.addEventListener("mousedown", (event) => {
     nodeInputParameters.nodeURI.innerText = unit.nodeURI.toStr();
     nodeInputParameters.nodeName.value = unit.name;
     nodeInputParameters.skyspherePath.value = unit.skysphere.path;
+    nodeInputParameters.nodeFloor.value = unit.floor;
+    nodeInputParameters.nodeFloorValue.innerText = `${unit.floor}`;
 
     activeContentShowNode = unit;
     if (event.shiftKey) {
@@ -468,7 +493,7 @@ system.canvas.addEventListener("mousemove", (event) => {
     let position = system.getPositionByCoord(event.clientX, event.clientY);
 
     if (position.x !== position.y && position.y !== position.z) {
-      activeContentShowNode.pos = position;
+      activeContentShowNode.position = position;
     } else {
       doMoveNode = false;
     }
@@ -486,6 +511,13 @@ nodeInputParameters.skyspherePath.addEventListener("change", () => {
     activeContentShowNode.skysphere.path = nodeInputParameters.skyspherePath.value;
   }
 }); /* event nodeInputParameters.skyspherePath:"change" */
+
+nodeInputParameters.nodeFloor.addEventListener("input", () => {
+  if (activeContentShowNode !== null) {
+    activeContentShowNode.floor = nodeInputParameters.nodeFloor.value;
+    nodeInputParameters.nodeFloorValue.innerText = activeContentShowNode.floor;
+  }
+}); /* event nodeInputParameters.nodeFloor:"input" */
 
 nodeInputParameters.makeDefault.addEventListener("click", () => {
   if (activeContentShowNode !== null) {
@@ -509,7 +541,7 @@ connectionInputParameters.deleteConnection.addEventListener("click", () => {
 
 // preview mode redirecting button
 document.getElementById("toPreview").addEventListener("click", () => {
-  window.location.href = "./viewer.html";
+  window.location.href = "./index.html";
 }); /* event document.getElementById("preview"):"click" */
 
 // start system
