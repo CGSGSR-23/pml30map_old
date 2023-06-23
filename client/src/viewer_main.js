@@ -167,7 +167,6 @@ document.addEventListener("keydown", async (event) => {
 }); /* event document:"keydown" */
 
 
-
 var mapCanvas = document.getElementById('minimapCanvas');
 mapCanvas.width = mapCanvas.height = 200;
 var mapContext = mapCanvas.getContext('2d');
@@ -220,8 +219,9 @@ for (let i = -1; i <= 4; i++)
   
   floorButtons[i] = floor;
 }
-console.log(floorsMaps);
+//console.log(floorsMaps);
 //console.log(minimapF1);
+setActive(floorButtons[curFloor], 1);
 
 var miniMapScale = .2;
 var miniMapOffset = new mth.Vec2(0, 0);
@@ -230,7 +230,6 @@ var mapPos1 = new mth.Vec2(11.5, 16.5);
 var minimapPos1 = new mth.Vec2(floorsMaps[0].width - centerPos.x, floorsMaps[0].height - centerPos.y);
 var mapCoef = mapPos1.length() / minimapPos1.length();
 
-var minimapGraph = await server.getAllNodesData();
 
 mapCanvas.onwheel = (e)=>{
   
@@ -260,39 +259,9 @@ mapCanvas.onclick = async ( e )=>{
     
   let mPos = new mth.Vec2(e.offsetX, e.offsetY).sub(miniMapOffset).mul(1 / miniMapScale);
 
-  console.log("AAAAAAAAAAAAAAAAAAAAAAAAAaaa");
-  console.log(mapCoef);
-  console.log("In");
-  console.log(mPos);
-  console.log(mPos.sub(centerPos));
   let pos = mPos.sub(centerPos).mul(mapCoef);
-  console.log("Out");
-  console.log(pos);
 
-  let y = 0;
-
-  switch (curFloor) {
-    case -1:
-      y = -2.5;
-      break;
-    case 0:
-      y = 0;
-      break;
-    case 1:
-      y = 1.5;
-      break;
-    case 2:
-      y = 6;
-      break;
-    case 3:
-      y = 11;
-      break;
-    case 4:
-      y = 16;
-      break;
-  }
-
-  let nearestURI = await server.getNearest(new mth.Vec3(pos.x, y, pos.y));
+  let nearestURI = await server.getNearest(new mth.Vec3(pos.x, 0, pos.y), curFloor);
   console.log(nearestURI);
   
   await setCurrentNode(nearestURI);

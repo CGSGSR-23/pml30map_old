@@ -243,9 +243,9 @@ async function main() {
       res(result);
     });
 
-    socket.on("getNearestReq", async ( inPos, res )=>{
+    socket.on("getNearestReq", async ( inPos, floor, res )=>{
       //let result = await DB.addDB(db);
-      let pos = new mth.Vec3(inPos.x, inPos.y, inPos.z);
+      let pos = new mth.Vec3(inPos.x, 0, inPos.z);
       let nodesData = await DB.getAllNodesData();
       
       if (nodesData.length <= 0)
@@ -255,10 +255,10 @@ async function main() {
   
       for (let i = 0; i < nodesData.length; i++)
       {
-        let nPos = new mth.Vec3(nearest.position.x, nearest.position.y, nearest.position.z);
-        let iPos = new mth.Vec3(nodesData[i].position.x, nodesData[i].position.y, nodesData[i].position.z);
+        let nPos = new mth.Vec3(nearest.position.x, 0, nearest.position.z);
+        let iPos = new mth.Vec3(nodesData[i].position.x, 0, nodesData[i].position.z);
       
-        if (pos.sub(iPos).length() < pos.sub(nPos).length())  
+        if (pos.sub(iPos).length() < pos.sub(nPos).length() && nodesData[i].floor === floor)  
           nearest = nodesData[i];
       }
       let out = nearest._id.id;
