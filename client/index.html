@@ -16,7 +16,7 @@
       </h2>
       <div id="minimap">
         <canvas id="minimapCanvas"></canvas>
-        <div id="floorSelector">
+        <div id="floorButtonBlock">
           <input type="button" id="floor-1" class="button floor" value="-1">
           <input type="button" id="floor0" class="button floor"  value="0">
           <input type="button" id="floor1" class="button floor"  value="1">
@@ -24,49 +24,6 @@
           <input type="button" id="floor3" class="button floor"  value="3">
           <input type="button" id="floor4" class="button floor"  value="4">
         </div>
-        <script>
-          
-          // Functions 
-
-          function setActive( button, newValue ) {
-            button.className = button.className.replace(" active", "");
-
-            if (newValue == 1)
-            {
-              button.className += " active";
-            }
-            else if (newValue == 0) {
-            }
-          }
-
-          function onFloorchange( newCurFloor ) {
-            console.log("NEW ACTIVE FLOOR: " + newCurFloor);
-          }
-
-          var floorButtons = [];
-          var curFloor = undefined;
-
-          for (let i = -1; i <= 4; i++)
-          {
-            let floor = document.getElementById("floor" + i);
-            
-            if (floor == undefined)
-            {
-              console.log("FUCK YOU, FLOOR " + i);
-              continue;
-            }
-            floor.onclick = ()=>{
-              if (curFloor != undefined)
-                setActive(floorButtons[curFloor], 0);
-              setActive(floor, 1);
-              onFloorchange(i);
-              curFloor = i;
-            };
-
-            floorButtons[i] = floor;
-          }
-          
-        </script>
       </div>
       <div>Location: <t id="currentNodeName"></t></div>
       <!--<div>Skysphere rotation: <input type="range" id="skysphereRotation" value="0" min="0" max="314"></div>-->

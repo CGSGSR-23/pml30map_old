@@ -49,7 +49,7 @@ div#minimap {
   flex-direction: row;
 }
 
-div#floorSelector {
+div#floorButtonBlock {
   display: flex;
   flex-direction: column;
   margin-left: 0.2em;

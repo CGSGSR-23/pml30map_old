@@ -179,6 +179,7 @@ document.addEventListener("keydown", async (event) => {
   }
 }); /* event document:"keydown" */
 
+
 // Minimap part
 
 var mapCanvas = document.getElementById('minimapCanvas');
@@ -191,28 +192,24 @@ function loadImg( fileName ) {
   return new Promise( async (resolve) => {
     img.onload = ()=>{ resolve(img); };
   });
-}
+} /* loadImg */
 
-var floorsMaps = [];
 
+// Floor maps loading
 function setActive( button, newValue ) {
   button.className = button.className.replace(" active", "");
 
   if (newValue == 1)
-  {
     button.className += " active";
-  }
-  else if (newValue == 0) {
-  }
-}
+} /* setActive */
 
 function onFloorchange( newCurFloor ) {
   console.log("NEW ACTIVE FLOOR: " + newCurFloor);
-}
+} /* onFloorchange */
 
-var floorButtons = [];
-var curFloor;
-
+let floorsMaps = [];
+let floorButtons = [];
+let curFloor;
 
 function setFloor( newFloor ) {
   if (curFloor !== undefined)
@@ -222,32 +219,29 @@ function setFloor( newFloor ) {
   curFloor = newFloor;
 }
 
-for (let i = -1; i <= 4; i++)
+// fill floor buttons
+let floorButtonBlock = document.getElementById("floorButtonBlock");
+for (let i = 0, len = floorButtonBlock.children.length; i < len; i++)
 {
-  floorButtons[i] = document.getElementById("floor" + i);
-  
-  if (floorButtons[i] == undefined)
-  {
-    console.log("FUCK YOU, FLOOR " + i);
-    continue;
-  }
-  floorButtons[i].onclick = ()=>{
-    setFloor(i);
+  // index of current button from button block
+  let buttonIndex = parseInt(floorButtonBlock.children[i].value);
+
+  floorButtons[buttonIndex] = floorButtonBlock.children[i];
+  floorButtons[buttonIndex].onclick = () => {
+    setFloor(buttonIndex);
   };
 
-  floorsMaps[i] = await loadImg(`minimap/f${i}.png`);
+  floorsMaps[buttonIndex] = await loadImg(`minimap/f${buttonIndex}.png`);
 }
-//setFloor(0);
 
-var miniMapScale = .2;
+var miniMapScale = 0.2;
 var miniMapOffset = new mth.Vec2(0, 0);
 var centerPos = new mth.Vec2(710, 340);
 var mapPos1 = new mth.Vec2(11.5, 16.5);
 var minimapPos1 = new mth.Vec2(floorsMaps[0].width - centerPos.x, floorsMaps[0].height - centerPos.y);
 var mapCoef = mapPos1.length() / minimapPos1.length();
 
-
-mapCanvas.onwheel = (e)=>{
+mapCanvas.onwheel = (e) => {
   
   let coef = Math.pow(0.95, e.deltaY / 100);
   console.log(e);
@@ -272,12 +266,12 @@ mapCanvas.onmousemove = ( e )=>{
 mapCanvas.onclick = async ( e )=>{
   if (curFloor === undefined)
     return;
-    
+
   let mPos = new mth.Vec2(e.offsetX, e.offsetY).sub(miniMapOffset).mul(1 / miniMapScale);
 
   let pos = mPos.sub(centerPos).mul(mapCoef);
   
-  let nearestURI = await server.getNearest(new mth.Vec3(pos.x, 0, pos.y), curFloor);
+  let nearestURI = await server.getNearest(new mth.Vec3(pos.x, 0, pos.y), parseInt(curFloor));
   console.log(nearestURI);
   
   await setCurrentNode(nearestURI);
