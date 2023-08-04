@@ -312,11 +312,6 @@ async function addServerData() {
       floor: serverNode.floor,
     }, true);
   }
-  // let serverNodeURIs = await server.getAllNodes();
-  // for (let serverNodeURI of serverNodeURIs) {
-  //   let serverNode = await server.getNode(serverNodeURI);
-  //   await createNode(mth.Vec3.fromObject(serverNode.position), serverNode.name, serverNode.skysphere, true, serverNodeURI);
-  // }
 
   // same shit, but with nice sth
   let serverConnections = await server.getAllConnections();
@@ -481,7 +476,7 @@ system.canvas.addEventListener("mousedown", (event) => {
   }
 }); /* event system.canvas:"mousedown" */
 
-
+// movement handler
 system.canvas.addEventListener("mouseup", (event) => {
   doMoveNode = false;
 }); /* event system.canvas:"mouseup" */

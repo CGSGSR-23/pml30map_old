@@ -20,7 +20,12 @@ let arrowMaterial = await system.createMaterial("./shaders/arrow");
 
 arrowMaterial.ubo = system.createUniformBuffer();
 arrowMaterial.uboNameOnShader = "arrowUBO";
-arrowMaterial.ubo.writeData(new Float32Array([screen.orientation.angle != 0 ? 3.0 : 1.0]));
+
+/* Setup window material */
+arrowMaterial.ubo.writeData(new Float32Array([window.innerHeight > window.innerWidth != 0 ? 3.0 : 1.0]));
+window.addEventListener("resize", () => {
+  arrowMaterial.ubo.writeData(new Float32Array([mth.clamp(window.innerHeight / window.innerWidth, 0.5, 1.5) * 2.0]));
+});
 
 let arrowPrim = await system.createEmptyPrimitive(4, rnd.Topology.TRIANGLE_FAN, arrowMaterial);
 let arrowUniqueID = 0;
