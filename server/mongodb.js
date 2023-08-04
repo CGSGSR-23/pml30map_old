@@ -7,11 +7,11 @@ class MongoDB { // Nodes data base
   varsC; // Variables collection
   mongodbConnection;
 
-  async init( mongodbURL ) {
+  async init( mongodbURL, DNName ) {
     const mongodbClient = new MongoClient(mongodbURL);
     this.mongodbConnection = await mongodbClient.connect();
     
-    this.db = await this.mongodbConnection.db("pml30map");
+    this.db = await this.mongodbConnection.db(DNName);
     //if (this.db.nodes == undefined)
     this.nodesC = await this.db.collection("nodes");
     this.connectionsC = await this.db.collection("connections");

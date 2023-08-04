@@ -34,7 +34,7 @@ cuttingHeightElement.addEventListener("input", () => {
 // displays basic construction
 const baseConstructionDisplayer = await system.addUnit(async function() {
   let buildingModel = await system.createPrimitive(
-    await rnd.Topology.model_obj("./bin/models/PML30_simple.obj"),
+    await rnd.Topology.model_obj("./bin/models/worldmap"),
     baseConstructionMaterial
   );
 

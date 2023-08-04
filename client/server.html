@@ -73,6 +73,10 @@
         </label><br/>
         <input id="createDBFileButton" type="button" value="create DB file"><br/>
       </div>
+      <div style="border: 2px dashed red; padding: 10px; margin: 5px;">
+        <h1>DB</h1>
+        <div id="DBList"></div>
+      </div>
     </div>
     <div id="output" style="flex: 2; background-color: black; color:azure"></div>
     <script type="module">
@@ -220,7 +224,7 @@
         console.log(uri);
         output.innerText = uri.toStr();
       };
-      
+
       document.getElementById("pingButton").onclick = async ()=>{
         output.innerText = await connection.ping(47);
       };
@@ -248,7 +252,7 @@
 
       document.getElementById("addDBButton").onclick = async ()=>{
         let DBfile = document.getElementById('dbSource').files[0];
-        
+
         //output.innerHTML = await connection.loadDB(newDB);
 
         var reader = new FileReader();
@@ -277,6 +281,27 @@
 //        download(dbText, document.getElementById("dbOutFileName").value, "text/plain;charset=utf-8");
       };
 
+      //<input id="clearDBButton" type="button" value="clear DB"><br/>
+
+      // Showing available db
+      console.log("AVAILABLE DBs:");
+      
+      var availableDBs = await connection.send("getAvailableDBs");
+
+      console.log(availableDBs);
+      var DBListHtml = "";
+
+      for (let i = 0; i < availableDBs.length; i++) {
+        DBListHtml += `<input id="DBListButton${i}" type="button" value="${availableDBs[i]}" index="${i}"><br/>`;
+      }
+      document.getElementById("DBList").innerHTML = DBListHtml;
+
+      for (let i = 0; i < availableDBs.length; i++) {
+        let b = document.getElementById(`DBListButton${i}`);
+        b.onclick = ()=>{
+          connection.send("setCurrentDB", i);
+        };
+      }
     </script>
   </body>
 </html>

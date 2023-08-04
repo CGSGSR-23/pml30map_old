@@ -13,6 +13,17 @@ const { allowedNodeEnvironmentFlags } = require("process");
 const app = express();
 app.use(morgan("combined"));
 app.use(fileupload());
+
+const availableDB = [
+  "pml30map",
+  "camp23map"
+];
+var curDBIndex = -1;
+
+app.use('/bin/models/worldmap', (req, res, next )=>{
+  res.sendFile(path.normalize(__dirname + `/../bin/models/${availableDB[curDBIndex]}.obj`));
+});
+
 app.use('/bin', express.static("../bin"));
 
 const enableKeys = 1; // 0 - no check
@@ -50,42 +61,24 @@ app.use('/', (req, res, next )=>{
 const server = http.createServer(app);
 const io = new Server(server);
 
+async function InitMongoDB( DB, newCurrent ) {
+  if (curDBIndex == newCurrent)
+    return 0;
+
+  if (newCurrent < 0 || newCurrent >= availableDB.length)
+    return 0;
+  
+  curDBIndex = newCurrent;
+  await DB.init("mongodb+srv://doadmin:i04J9b2t1X853Cuy@db-mongodb-pml30-75e49c39.mongo.ondigitalocean.com/admin?tls=true&authSource=admin", availableDB[newCurrent]);
+  return 1;
+}
 
 async function main() {
   var DB = new MongoDB;
 
-  await DB.init("mongodb+srv://doadmin:i04J9b2t1X853Cuy@db-mongodb-pml30-75e49c39.mongo.ondigitalocean.com/admin?tls=true&authSource=admin");
+  //await DB.init("mongodb+srv://doadmin:i04J9b2t1X853Cuy@db-mongodb-pml30-75e49c39.mongo.ondigitalocean.com/admin?tls=true&authSource=admin", "pml30map");
+  await InitMongoDB(DB, 0);
   //await DB.init("mongodb://127.0.0.1:27017");
-
-  //app.post('/addNode', (req, res) => {
-  //  console.log("POST 'addNode':");
-  //  const imgName = "NODE_IMG" + getValidImageURI() + ".png";
-  //  const imgPath = path.normalize(__dirname + '/../bin/imgs/' + imgName);
-  //  const image = req.files.img;
-//
-  //  image.mv(imgPath, (error) => {
-  //    if (error) { // ERROR
-  //      console.error("IMAGE LOAD ERROR: " + error);
-  //      res.writeHead(500, {
-  //        'Content-Type': 'application/json'
-  //      })
-  //      res.end(JSON.stringify({status: 'error', message: error}));
-  //      return;
-  //    }
-//
-  //    // Add node
-  //    var nodeURI = addNode({
-  //      image: imgName,
-  //      pos: req.body.pos,
-  //      connections: req.body.connections,
-  //    });
-//
-  //    res.writeHead(200, {
-  //      'Content-Type': 'application/json'
-  //    });
-  //    res.end(JSON.stringify({status: 'success', node_uri: nodeURI}));
-  //  });
-  //});
 
   // For test
   io.on("connection", (socket) => {
@@ -213,6 +206,17 @@ async function main() {
     });
 
     // Global DB requests
+
+    socket.on("getAvailableDBs", ( res )=>{
+      LogMsg("getAvailableDBs", "", availableDB);
+      res(availableDB);
+    });
+
+    socket.on("setCurrentDB", async ( newCurrent, res )=>{
+      let result = await InitMongoDB(DB, newCurrent);
+      LogMsg("setCurrentDB", newCurrent, result);
+      res(result);
+    });
 
     socket.on("clearDBReq", async ( res )=>{
       let result = await DB.clearDB();
