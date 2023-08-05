@@ -31,7 +31,7 @@ const availableDB = [
     minimapScale: 0.2,
     minimapOffset: new mth.Vec2(0, 0),
     imgCenterPos: new mth.Vec2(645, 575),
-    modelEndPos: new mth.Vec2(53.41, 56.26),
+    modelEndPos: new mth.Vec2(22.48, -26.1),
   }
 ];
 var curDBIndex = -1;
