@@ -13,19 +13,19 @@
     <div id="ui">
       <table id="nodeParameters" hidden>
         <th>Node parameters</th>
-        <tr> <td colspan="2">Node URI:      </td> <td><t id="nodeURI"></t>                                 </td> </tr>
-        <tr> <td colspan="2">Node name:     </td> <td><input type="text"  id="nodeName">                   </td> </tr>
-        <tr> <td colspan="2">Skysphere path:</td> <td><input type="text"  id="skyspherePath">              </td> </tr>
-        <tr> <td>Node floor:    </td> <td id="nodeFloorValue">amogus</td> <td><input type="range" id="nodeFloor" min="-1" max="4"></td> </tr>
-        <tr> <td><input type="button" id="makeDefault" value="Make default">                   </td> </tr>
-        <tr> <td><input type="button" id="deleteNode" value="Delete node">                     </td> </tr>
+        <tr> <td colspan="2">Node URI:       </td> <td><t id="nodeURI"></t>                                 </td> </tr>
+        <tr> <td colspan="2">Node name:      </td> <td><input type="text"  id="nodeName">                   </td> </tr>
+        <tr> <td colspan="2">Skysphere path: </td> <td><input type="text"  id="skyspherePath">              </td> </tr>
+        <tr> <td>Node floor:                 </td> <td id="nodeFloorValue">amogus</td> <td><input type="range" id="nodeFloor" min="-1" max="4"></td> </tr>
+        <tr> <td><input type="button" id="makeDefault" value="Make default"> </td> </tr>
+        <tr> <td><input type="button" id="deleteNode" value="Delete node">   </td> </tr>
       </table>
       <table id="connectionParameters" hidden>
         <th>Connection parameters</th>
         <tr> <td>Nodes URI:</td> <td><t id="connectionNodesURI"></t></td> </tr>
         <tr> <td><input type="button" id="deleteConnection" value="Break connection"></td></tr>
       </table>
-      <div>Building height: <input type="range" min="0" max="4" id="baseConstructionCuttingHeight" value="1"></div>
+      <div>Building height: <input type="range" min="0" max="4" id="baseConstructionCuttingHeight" value="4"></div>
       <input type="button" id="toPreview" value="To Preview">
       <input type="button" id="toServer" value="To Server">
     </div>

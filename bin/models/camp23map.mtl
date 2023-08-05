@@ -1,7 +1,7 @@
-# Blender MTL File: 'template_map.blend'
+# Blender MTL File: 'None'
 # Material Count: 2
 
-newmtl Material.001
+newmtl Material.004
 Ns 12.456746
 Ka 1.000000 1.000000 1.000000
 Kd 0.252677 0.269935 0.117363
@@ -11,10 +11,12 @@ Ni 1.450000
 d 1.000000
 illum 2
 
-newmtl None
-Ns 500
-Ka 0.8 0.8 0.8
-Kd 0.8 0.8 0.8
-Ks 0.8 0.8 0.8
-d 1
+newmtl None.003
+Ns 500.000001
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.800000 0.800000 0.800000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
 illum 2
