@@ -217,6 +217,20 @@ function setFloor( newFloor ) {
   curFloor = newFloor;
 } /* End of 'setFloor' function */
 
+function drawAvatar( ctx, coords )
+{
+  const size = 5;
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = 'rgb(255, 0, 0)';
+
+  ctx.beginPath();
+  ctx.moveTo(coords.x - size, coords.y - size);
+  ctx.lineTo(coords.x + size, coords.y + size);
+  ctx.moveTo(coords.x + size, coords.y - size);
+  ctx.lineTo(coords.x - size, coords.y + size);
+  ctx.closePath();
+  ctx.stroke();
+} /* End of 'drawAvatar' function */
 
 var floorsMaps = [];
 var floorButtons = [];
@@ -308,6 +322,12 @@ async function setupMinimap() {
       return;
 
     mapContext.drawImage(floorsMaps[curFloor], minimapOffset.x, minimapOffset.y, floorsMaps[curFloor].width * minimapScale, floorsMaps[curFloor].height * minimapScale);
+
+    if (currentNode != undefined)
+    {
+      let avatarPos = (new mth.Vec2(currentNode.position.x, currentNode.position.z)).mul(1 / mapCoef).add(imgCenterPos);
+      drawAvatar(mapContext, avatarPos.mul(minimapScale).add(minimapOffset));
+    }
   }, 10);
 }
 
