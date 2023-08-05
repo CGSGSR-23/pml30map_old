@@ -69,6 +69,7 @@ export class Skysphere {
             rgh.x, rgh.y, rgh.z, slideCoefficent,
             tup.x, tup.y, tup.z,
             sphere.rotation,
+            1.75,
             slideRotation
           ]));
         } else {
@@ -77,6 +78,7 @@ export class Skysphere {
             rgh.x, rgh.y, rgh.z, 0,
             tup.x, tup.y, tup.z,
             sphere.rotation,
+            1.75,
             0
           ]));
         }

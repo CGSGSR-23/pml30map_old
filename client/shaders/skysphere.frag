@@ -28,7 +28,7 @@ in float drawID;
 void main() {
   vec3 dir = camDir.xyz + camRight.xyz * drawTexCoord.x + camUp.xyz * drawTexCoord.y;
   vec2 basicTexCoord = vec2(
-    sign(dir.z) * acos(dir.x / length(dir.xz)) / PI / 2.0 + 1.75,
+    sign(dir.z) * acos(dir.x / length(dir.xz)) / PI / 2.0,
     acos(dir.y / length(dir)) / PI
   );
   vec2 texCoord = vec2(

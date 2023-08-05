@@ -330,7 +330,8 @@ system.canvas.addEventListener("mousedown", (event) => {
     if (unit !== undefined && unit.type === "baseConstruction") {
       createNode({
         position: system.getPositionByCoord(event.clientX, event.clientY),
-        name: "<empty_node>"
+        name: "<empty_node>",
+        floor: 0,
       });
     }
   }

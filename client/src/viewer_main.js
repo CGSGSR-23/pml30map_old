@@ -16,6 +16,8 @@ system.renderParams.cullFace = true;
 let skysphere = await system.addUnit(Skysphere.create, "./bin/imgs/lakhta.png");
 let cameraController = system.addUnit(Rotator.create);
 
+skysphere.rotation = Math.PI * 0.50;
+
 let arrowMaterial = await system.createMaterial("./shaders/arrow");
 
 arrowMaterial.ubo = system.createUniformBuffer();
@@ -82,7 +84,7 @@ async function setCurrentNode(nodeURI) {
 
   //skysphereRotation.value = currentNode.skysphere.rotation / (Math.PI * 2) * 314;
   await Promise.all([
-    skysphere.slide(skysphereFolderPath + currentNode.skysphere.path, currentNode.skysphere.rotation),
+    skysphere.slide(skysphereFolderPath + currentNode.skysphere.path, skysphere.rotation),
 
     new Promise(async (resolve) => {
       let neighbourURIs = await server.getNeighbours(nodeURI);
