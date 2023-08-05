@@ -14,7 +14,8 @@ const app = express();
 app.use(morgan("combined"));
 app.use(fileupload());
 
-const availableDB = [{
+const availableDB = [
+  {
     name: "pml30map",
     floorCount: 6,
     firstFloor: -1,
@@ -92,7 +93,7 @@ async function main() {
   var DB = new MongoDB;
 
   //await DB.init("mongodb+srv://doadmin:i04J9b2t1X853Cuy@db-mongodb-pml30-75e49c39.mongo.ondigitalocean.com/admin?tls=true&authSource=admin", "pml30map");
-  await InitMongoDB(DB, 1);
+  await InitMongoDB(DB, 0);
   //await DB.init("mongodb://127.0.0.1:27017");
 
   // For test

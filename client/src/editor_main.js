@@ -129,7 +129,7 @@ async function createNode(data, addedOnServer = false) {
     } /* set */
   }); /* property unit:"name" */
 
-  let floor = data.floor === undefined ? 0 : data.floor;
+  let floor = 0;
   Object.defineProperty(unit, "floor", {
     get() {
       return floor;
@@ -185,6 +185,10 @@ async function createNode(data, addedOnServer = false) {
     name = `node#${unit.nodeURI}`;
   }
 
+  // set floor
+  unit.floor = data.floor === undefined ? 0 : data.floor;
+
+  // set banner
   unit.banner = await Banner.create(system, name, position, 2);
   unit.banner.show = false;
 
@@ -305,11 +309,11 @@ async function addServerData() {
   for (let i = 0, count = serverNodes.length; i < count; i++) {
     let serverNode = serverNodes[i];
     await createNode({
-      position: mth.Vec3.fromObject(serverNode.position),
-      name: serverNode.name,
-      skysphere: serverNode.skysphere,
-      nodeURI: serverNodeURIs[i],
-      floor: serverNode.floor,
+      position  : mth.Vec3.fromObject(serverNode.position),
+      name      : serverNode.name,
+      skysphere : serverNode.skysphere,
+      nodeURI   : serverNodeURIs[i],
+      floor     : serverNode.floor == undefined ? 0 : serverNode.floor,
     }, true);
   }
 
@@ -330,7 +334,8 @@ system.canvas.addEventListener("mousedown", (event) => {
     if (unit !== undefined && unit.type === "baseConstruction") {
       createNode({
         position: system.getPositionByCoord(event.clientX, event.clientY),
-        name: "<empty_node>"
+        name: "<empty_node>",
+        floor: 0,
       });
     }
   }
