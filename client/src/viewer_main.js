@@ -129,6 +129,12 @@ document.getElementById("toEditor").addEventListener("click", () => {
   window.location.href = "./editor.html" + window.location.search;
 }); /* event document.getElementById("toEditor"):"click" */
 
+// return to server
+document.getElementById("toServer").addEventListener("click", () => {
+  window.location.href = "./server.html" + window.location.search;
+}); /* event document.getElementById("toServer"):"click" */
+
+
 //skysphereRotation.addEventListener("input", (event) => {
 //  let angle = skysphereRotation.value / 314 * Math.PI * 2;
 //
@@ -182,10 +188,6 @@ document.addEventListener("keydown", async (event) => {
 
 // Minimap part
 
-var mapCanvas = document.getElementById('minimapCanvas');
-mapCanvas.width = mapCanvas.height = 200;
-var mapContext = mapCanvas.getContext('2d');
-
 function loadImg( fileName ) {
   var img = new Image();
   img.src = "./bin/imgs/" + fileName;
@@ -207,86 +209,109 @@ function onFloorchange( newCurFloor ) {
   console.log("NEW ACTIVE FLOOR: " + newCurFloor);
 } /* onFloorchange */
 
-let floorsMaps = [];
-let floorButtons = [];
-let curFloor;
-
 function setFloor( newFloor ) {
   if (curFloor !== undefined)
     setActive(floorButtons[curFloor], 0);
   setActive(floorButtons[newFloor], 1);
   onFloorchange(newFloor);
   curFloor = newFloor;
-}
+} /* End of 'setFloor' function */
 
-// fill floor buttons
-let floorButtonBlock = document.getElementById("floorButtonBlock");
-for (let i = 0, len = floorButtonBlock.children.length; i < len; i++)
-{
-  // index of current button from button block
-  let buttonIndex = parseInt(floorButtonBlock.children[i].value);
 
-  floorButtons[buttonIndex] = floorButtonBlock.children[i];
-  floorButtons[buttonIndex].onclick = () => {
-    setFloor(buttonIndex);
+var floorsMaps = [];
+var floorButtons = [];
+var curFloor;
+
+
+async function setupMinimap() {
+  var mapCanvas = document.getElementById('minimapCanvas');
+  mapCanvas.width = mapCanvas.height = 200;
+  var mapContext = mapCanvas.getContext('2d');
+
+  var DBInfo = await server.send("getDBInfo", await server.send("getCurDBIndex"));
+  console.log(DBInfo);
+
+  // Add floor buttons
+  let floorButtonBlock = document.getElementById("floorButtonBlock");
+
+  let buttonsHtml = "";
+  for (let i = 0, len = DBInfo.floorCount; i < len; i++)
+    buttonsHtml += `<input type="button" id="floor${DBInfo.firstFloor + i}" class="button floor" value="${DBInfo.firstFloor + i}">`;
+  floorButtonBlock.innerHTML = buttonsHtml;
+
+  // Load images
+  for (let i = 0, len = DBInfo.floorCount; i < len; i++)
+  {
+    // index of current button from button block
+    let floorIndex = DBInfo.firstFloor + i;
+  
+    floorButtons[floorIndex] = floorButtonBlock.children[i];
+    floorButtons[floorIndex].onclick = () => {
+      setFloor(floorIndex);
+    };
+  
+    floorsMaps[floorIndex] = await loadImg(`minimap/${DBInfo.name}/f${floorIndex}.png`);
+  }
+
+  console.log(floorsMaps);
+
+  var modelEndPos = new mth.Vec2(DBInfo.modelEndPos.x, DBInfo.modelEndPos.y);
+  var minimapOffset = new mth.Vec2(DBInfo.minimapOffset.x, DBInfo.minimapOffset.y);
+  var minimapScale = DBInfo.minimapScale;
+  var imgCenterPos = new mth.Vec2(DBInfo.imgCenterPos.x, DBInfo.imgCenterPos.y);
+
+  var imgEndPos = new mth.Vec2(floorsMaps[0].width - DBInfo.imgCenterPos.x, floorsMaps[0].height - DBInfo.imgCenterPos.y);
+  var mapCoef = modelEndPos.length() / imgEndPos.length();
+
+  mapCanvas.onwheel = (e) => {
+
+    let coef = Math.pow(0.95, e.deltaY / 100);
+    console.log(e);
+    let mousePos = new mth.Vec2(e.offsetX, e.offsetY);
+
+    minimapOffset = mousePos.sub(mousePos.sub(minimapOffset).mul(coef));
+
+    minimapScale *= coef;
+
+    console.log(minimapOffset);
+    console.log(minimapScale);
   };
 
-  floorsMaps[buttonIndex] = await loadImg(`minimap/f${buttonIndex}.png`);
+  mapCanvas.oncontextmenu = ( e )=>{
+    e.preventDefault();
+  };
+  mapCanvas.onmousemove = ( e )=>{
+    if (e.buttons & 2) // Drag
+    minimapOffset = minimapOffset.add(new mth.Vec2(e.movementX, e.movementY));
+  };
+
+  mapCanvas.onclick = async ( e )=>{
+    if (curFloor === undefined)
+      return;
+
+    let mPos = new mth.Vec2(e.offsetX, e.offsetY).sub(minimapOffset).mul(1 / minimapScale);
+
+    let pos = mPos.sub(imgCenterPos).mul(mapCoef);
+
+    let nearestURI = await server.getNearest(new mth.Vec3(pos.x, 0, pos.y), parseInt(curFloor));
+    console.log(nearestURI);
+
+    await setCurrentNode(nearestURI);
+    //await setCurrentNode();
+  }
+
+  window.setInterval(()=>{
+    // Render
+    mapContext.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
+
+    if (curFloor === undefined)
+      return;
+
+    mapContext.drawImage(floorsMaps[curFloor], minimapOffset.x, minimapOffset.y, floorsMaps[curFloor].width * minimapScale, floorsMaps[curFloor].height * minimapScale);
+  }, 10);
 }
 
-var miniMapScale = 0.2;
-var miniMapOffset = new mth.Vec2(0, 0);
-var centerPos = new mth.Vec2(710, 340);
-var mapPos1 = new mth.Vec2(11.5, 16.5);
-var minimapPos1 = new mth.Vec2(floorsMaps[0].width - centerPos.x, floorsMaps[0].height - centerPos.y);
-var mapCoef = mapPos1.length() / minimapPos1.length();
-
-mapCanvas.onwheel = (e) => {
-  
-  let coef = Math.pow(0.95, e.deltaY / 100);
-  console.log(e);
-  let mousePos = new mth.Vec2(e.offsetX, e.offsetY);
-
-  miniMapOffset = mousePos.sub(mousePos.sub(miniMapOffset).mul(coef));
-
-  miniMapScale *= coef;
-
-  console.log(miniMapOffset);
-  console.log(miniMapScale);
-};
-
-mapCanvas.oncontextmenu = ( e )=>{
-  e.preventDefault();
-};
-mapCanvas.onmousemove = ( e )=>{
-  if (e.buttons & 2) // Drag
-    miniMapOffset = miniMapOffset.add(new mth.Vec2(e.movementX, e.movementY));   
-};
-
-mapCanvas.onclick = async ( e )=>{
-  if (curFloor === undefined)
-    return;
-
-  let mPos = new mth.Vec2(e.offsetX, e.offsetY).sub(miniMapOffset).mul(1 / miniMapScale);
-
-  let pos = mPos.sub(centerPos).mul(mapCoef);
-  
-  let nearestURI = await server.getNearest(new mth.Vec3(pos.x, 0, pos.y), parseInt(curFloor));
-  console.log(nearestURI);
-  
-  await setCurrentNode(nearestURI);
-  //await setCurrentNode();
-}
-
-window.setInterval(()=>{
-  // Render
-  mapContext.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
-  
-  if (curFloor === undefined)
-    return;
-
-  mapContext.drawImage(floorsMaps[curFloor], miniMapOffset.x, miniMapOffset.y, floorsMaps[curFloor].width * miniMapScale, floorsMaps[curFloor].height * miniMapScale);
-}, 10);
+await setupMinimap();
 
 system.run();
 

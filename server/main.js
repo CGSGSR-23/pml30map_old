@@ -14,14 +14,29 @@ const app = express();
 app.use(morgan("combined"));
 app.use(fileupload());
 
-const availableDB = [
-  "pml30map",
-  "camp23map"
+const availableDB = [{
+    name: "pml30map",
+    floorCount: 6,
+    firstFloor: -1,
+    minimapScale: 0.2,
+    minimapOffset: new mth.Vec2(0, 0),
+    imgCenterPos: new mth.Vec2(710, 340),
+    modelEndPos: new mth.Vec2(11.5, 16.5),
+  },
+  {
+    name: "camp23map",
+    floorCount: 1,
+    firstFloor: 0,
+    minimapScale: 0.2,
+    minimapOffset: new mth.Vec2(0, 0),
+    imgCenterPos: new mth.Vec2(710, 340),
+    modelEndPos: new mth.Vec2(11.5, 16.5),
+  }
 ];
 var curDBIndex = -1;
 
 app.use('/bin/models/worldmap', (req, res, next )=>{
-  res.sendFile(path.normalize(__dirname + `/../bin/models/${availableDB[curDBIndex]}.obj`));
+  res.sendFile(path.normalize(__dirname + `/../bin/models/${availableDB[curDBIndex].name}.obj`));
 });
 
 app.use('/bin', express.static("../bin"));
@@ -69,7 +84,7 @@ async function InitMongoDB( DB, newCurrent ) {
     return 0;
   
   curDBIndex = newCurrent;
-  await DB.init("mongodb+srv://doadmin:i04J9b2t1X853Cuy@db-mongodb-pml30-75e49c39.mongo.ondigitalocean.com/admin?tls=true&authSource=admin", availableDB[newCurrent]);
+  await DB.init("mongodb+srv://doadmin:i04J9b2t1X853Cuy@db-mongodb-pml30-75e49c39.mongo.ondigitalocean.com/admin?tls=true&authSource=admin", availableDB[newCurrent].name);
   return 1;
 }
 
@@ -208,8 +223,25 @@ async function main() {
     // Global DB requests
 
     socket.on("getAvailableDBs", ( res )=>{
-      LogMsg("getAvailableDBs", "", availableDB);
-      res(availableDB);
+      let availableDBNames = [];
+      for (let i = 0; i < availableDB.length; i++)
+        availableDBNames[i] = availableDB[i].name;
+      LogMsg("getAvailableDBs", "", availableDBNames);
+      res(availableDBNames);
+    });
+
+    socket.on("getCurDBIndex", async ( res )=>{
+      LogMsg("getCurDBIndex", "", curDBIndex);
+      res(curDBIndex);
+    });
+
+    socket.on("getDBInfo", async ( i, res )=>{
+      if (i < 0 || i >= availableDB.length)
+        return;
+
+      let info = availableDB[i];
+      LogMsg("getDBInfo", i, info);
+      res(info);
     });
 
     socket.on("setCurrentDB", async ( newCurrent, res )=>{
